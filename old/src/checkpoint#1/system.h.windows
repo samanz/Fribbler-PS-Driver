@@ -1,0 +1,18 @@
+/****************************************************************/
+/* A system.h file						*/
+/*								*/
+/* system.h files specify the environment for the software	*/
+/* generally the OS						*/
+/*								*/
+/* This one is for :-						*/
+/* 	Windows XP						*/
+/*								*/
+/****************************************************************/
+#include "WinsocSerial.h"
+#include "WinSerial.h"
+#include "WinFile.h"
+
+
+
+#define ADDRESS			NULL
+

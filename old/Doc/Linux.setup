@@ -1,0 +1,95 @@
+MYRO GNU/Linux Setup on Ubuntu 8.10 (Intrepid) 
+==============================================
+
+
+Myro setup:
+-----------
+
+Go to terminal and execute those commands.
+
+andrea@castellaniX:~$ mkdir myro
+andrea@castellaniX:~$ cd myro
+andrea@castellaniX:~$ sudo apt-get update
+andrea@castellaniX:~$ sudo apt-get install python python-tk python-serial python-pyxmpp python-imaging python-imaging-tk python-numpy libsnack2 python-pygame festival festvox-rablpc16k
+andrea@castellaniX:~$ sudo ldconfig
+andrea@castellaniX:~$ wget http://myro.roboteducation.org/download/myro-2.8.14.zip
+andrea@castellaniX:~$ unzip myro-2.8.14.zip
+andrea@castellaniX:~$ sudo python setup.py install
+andrea@castellaniX:~$ wget http://cvs.cs.brynmawr.edu/cgi-bin/viewcvs.cgi/*checkout*/Myro/misc/ScriptBinding.py
+andrea@castellaniX:~$ wget http://cvs.cs.brynmawr.edu/cgi-bin/viewcvs.cgi/*checkout*/Myro/misc/config-extensions.def
+andrea@castellaniX:~$ sudo cp ScriptBinding.py /usr/lib/python2.5/idlelib/.
+andrea@castellaniX:~$ sudo cp config-extensions.def /usr/lib/python2.5/idlelib/.
+andrea@castellaniX:~$ wget http://cvs.cs.brynmawr.edu/cgi-bin/viewcvs.cgi/*checkout*/Myro/Start%20Python.pyw
+andrea@castellaniX:~$ chmod +x Start\ Python.pyw
+
+All done!! Now you may open Myro IDLE window:
+andrea@castellaniX:~$ ./Start\ Python.pyw
+
+
+
+bluetooth tips:
+---------------
+Go to terminal and execute those commands.
+
+andrea@castellaniX:~$ hcitool scan
+  [...read the IPRE Fluke mac-address xx:xx:xx:xx:xx:xx, mark and copy it. Example of output:]
+Scanning ...
+       00:1E:19:01:05:16       IPRE6-245699
+
+andrea@castellaniX:~$ sudo gedit /var/lib/bluetooth/pincodes
+  [...paste your IPRE mac-address in gedit and write " 1234". Example of my add:]
+00:1E:19:01:05:16 1234
+  [...now save the file and exit from gedit]
+
+andrea@castellaniX:~$ sudo gedit /etc/bluetooth/rfcomm.conf
+  [...add an entry like this above, but pasting your IPRE mac-address. Example of my config:]
+rfcomm0 {
+       # Automatically bind the device at startup
+       bind yes;
+       # Bluetooth address of the device
+       device 00:1E:19:01:05:16;
+       #BorgDongle
+       # RFCOMM channel for the connection
+       channel	1;
+       # Description of the connection
+       comment "IPRE Scribbler Dongle";
+}
+  [...now save the file and exit from gedit]
+
+andrea@castellaniX:~$ sudo hcitool cc xx:xx:xx:xx:xx:xx [...you have to paste your IPRE mac-address]
+andrea@castellaniX:~$ sudo rfcomm bind all
+andrea@castellaniX:~$ sudo hcitool con 
+  [...this will show if the IPRE is connected. Example of output:]
+Connections:
+	< ACL 00:1E:19:01:05:16 handle 11 state 1 lm MASTER
+
+If you don't see your IPRE mac-address listed, try to restart bluetooth:
+andrea@castellaniX:~$ sudo /etc/init.d/bluetooth force-reload
+...or simply restart the computer.
+
+
+
+Write a simple check program:
+-----------------------------
+Go in Myro IDLE window
+
+andrea@castellaniX:~$ ./Start\ Python.pyw
+
+...and write those commands:
+
+>>> from myro import *
+>>> init()
+  [...now your IPRE com port could be "/dev/rfcomm0", so write it]
+>>> p = makePicture("color")
+>>> show(p)                          # should open up a window with the camera shot
+>>> computer.beep(1, 800)            # should make a beep
+>>> speak("Hello world!")            # should speak
+>>> joyStick()			     # should open a windows letting you to drive your robot
+
+See "Myro Installation Manual" for other details.
+
+
+
+======================================
+v0.1 by Andrea Castellani (CC-license)
+

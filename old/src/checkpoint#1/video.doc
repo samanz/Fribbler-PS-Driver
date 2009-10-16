@@ -1,0 +1,38 @@
+ From any computer with vlc and an internet connection
+
+     vlc http://24.45.27.1:8070
+
+ will bring up a video, the picture you are seeing is the hallway
+ outside my study, and if we are lucky you should see the Scribbler/Fluke
+ robot somewhere in the picture
+ On Linux and Mac computers
+
+     ssh student@24.45.27.1
+
+ with password "robotfun" will have you signed in to my local computer
+ which can communicate with the robot
+ For the moment, the best thing to do is
+
+     ./scrib
+
+ and the robot should start moving and printfing its sensor readings
+ For Windows computers use PuTTY to establish a ssh connection
+ username "student", password "robotfun".
+
+   You can also upload programs using scp on Linux and the
+ file transfer tools PSCP and PSFTP in Windows
+
+
+ If anyone has some time, please try it out and send me your impressions.
+ I have done a little testing from a local coffee shop and was quite pleased.
+ Each part came up with only a short wait, and the video and ssh feeds
+ were within a couple of seconds of each other.
+
+	I used port forwarding on my router for port 22 (ssh) and port
+8070 (video) to route these to my desktop computer. Just forwarding
+TCP on port 8070 for performance. I allowed access to ports 22 and 8070
+on my firewall and running the following script on my desktop
+
+sudo chmod 666 /dev/rfcomm0
+vlc v4l2:// v4l-vdev=/dev/video0 --sout="#transcode{vcodec=mp4v}:duplicate{dst=display,dst=std{access=http,mux=ogg,dst=:8070}}" --ttl 12
+

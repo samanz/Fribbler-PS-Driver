@@ -1,0 +1,18 @@
+/****************************************************************/
+/* A system.h file						*/
+/*								*/
+/* system.h files specify the environment for the software	*/
+/* generaly the OS and the method of communication.		*/
+/*								*/
+/* This one is for :-						*/
+/* 	Windows XP						*/
+/*	and communication via Winsock				*/
+/****************************************************************/
+#include "WinsocSerial.h"
+#include "WinFile.h"
+
+#define CLIENT_SERIAL	ClientSerial
+#define SERVER_SERIAL	ServerSerial
+
+#define ADDRESS			"localsocket"
+

@@ -1,0 +1,639 @@
+' {$STAMP BS2}
+' {$PBASIC 2.5}
+' Scribbler robot server code
+' IPRE (http://www.roboteducation.org/)
+' For use with Myro and MSRS
+
+'--------------------------------------------------------------------
+'''''''''''''''''''''''''''''''''''''''
+' Default Robot Name
+'   Gets set on reprogram
+' Default Data - application uses
+'   Gets set on reprogram
+'''''''''''''''''''''''''''''''''''''''
+nameData DATA          "Scribby         " ' 16 chars for 2 packets
+'                       1234567890123456
+ipreData DATA          127,127,127,127,0,0,0,0
+'
+'First four values of ipreData are the fudge data stored to EEPROM
+'It defaults to 127 (1.0) or no fudging.
+
+passData DATA          "Scribby         " ' 16 chars for password
+
+echoData DATA          0  'MSRS = 1, Myro = 0
+sendData DATA          0  'MSRS = 1, Myro = 0
+quietData DATA         0  'Don't play beeps?
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+' IPRE Scribbler API
+'
+' Version information is at bottom of file.
+'
+' Overview:
+'   Messages to robot are a constant 9 bytes long.  Messages from robot are
+'   variable length depending on the message type.  See below for details.
+'
+'   On startup, the robot repeatedly sends its name preceded by "IPRE" every
+'   'TIMEOUT' milliseconds.  This allows the PC to find it and connect.  After
+'   the scribbler receives a command, this name broadcasting stops.
+'
+'   All "SET" messages have a return type of "GET_ALL".
+'
+' Messages TO robot:
+'   The first byte is the message type
+'   The next bytes are the command data (if any)
+'   The rest of the message is filled with null characters until a total of 9 bytes.
+'
+' Messages FROM robot:
+'   The first bytes are the message data
+'   The last byte is the message type
+'     If the message is a GET type message, just the requested data is sent
+'     If the message is a SET type message, the binary state of the robot is sent
+'
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+SOFT_RESET         CON 33  ' Format: 33 0 0 0 0 0 0 0 0, Notes: Performs a software reset of robot.  (turns name broadcast back on)
+GET_ALL            CON 65  ' Response: leftIR rightIR LeftLightHighyte LeftLightLowByte CenterLightHighByte CenterLightLowByte RightLightHighByte RightLightLowByte LineLeft LineRight Stall 65
+GET_ALL_BINARY     CON 66  ' Response: BinaryData 66, Notes: where the individual bits of BinaryData are: 0x000 IRLeft IRRight Stall LineLeft LineRight
+GET_LIGHT_LEFT     CON 67  ' Response: HighByte LowByte 67
+GET_LIGHT_CENTER   CON 68  ' Response: HighByte LowByte 68
+GET_LIGHT_RIGHT    CON 69  ' Response: HighByte LowByte 69
+GET_LIGHT_ALL      CON 70  ' Response: LeftHighyte LeftLowByte CenterHighByte CenterLowByte RightHighByte RightLowByte 70
+GET_IR_LEFT        CON 71  ' Response: leftIR 71, Notes: IR is 1 when there is no obstacle to the left of robot
+GET_IR_RIGHT       CON 72  ' Response: rightIR 72, Notes: IR is 1 when there is no obstacle to the left of robot
+GET_IR_ALL         CON 73  ' Response: LeftIR RightIR 73, Notes: IR is 1 when there is no obstacle to the left of robot
+GET_LINE_LEFT      CON 74  ' Response: lineLeft 74
+GET_LINE_RIGHT     CON 75  ' Response: lineRight 75
+GET_LINE_ALL       CON 76  ' Response: LineLeft LineRight 76
+GET_STATE          CON 77  ' Response: inPins outPins 77, Notes: inPins is the state of all the input pins (0-7), and outPins is the state of all the output pins (8-15) as defined in the I/O Pin Declarations.
+GET_NAME1          CON 78  ' Response: char1 char2 char3 char4 char5 char6 char7 char8 78
+GET_NAME2          CON 64  ' Response: char9 char10 char11 char12 char13 char14 char15 char16 87
+GET_STALL          CON 79  ' Response: stall 79
+GET_INFO           CON 80  ' Response: "information on version robot, etc" 10 80
+GET_DATA           CON 81  ' Response: data from flash memory 81
+
+GET_PASS1          CON 50  ' Respone: 16 bytes from flash memory
+GET_PASS2          CON 51  ' Respone: 16 bytes from flash memory
+
+' Reserved for Camera Dongle:
+' R 82
+' S 83
+' T 84
+' U 85
+' V 86
+' X 88
+' Y 89
+' Z 90
+' [ 91
+'   92
+
+' 116
+' 117
+' 118
+' 120
+' 121
+' 122
+' 123
+' 124
+' 125
+' 126
+' 127
+' 128
+' 129
+' 130
+' 131
+
+' Unused:
+
+' ^ 94
+' _ 95
+' 131 -> 255
+
+SET_SINGLE_DATA    CON 96  ' Sets a single byte of data in flash memory'
+SET_DATA           CON 97  ' Sets 8 bytes of data in flash memory
+SET_ECHO_MODE      CON 98  ' Set the echo mode on or off; if off, no echo is made after command
+SET_LED_LEFT_ON    CON 99
+SET_LED_LEFT_OFF   CON 100
+SET_LED_CENTER_ON  CON 101
+SET_LED_CENTER_OFF CON 102
+SET_LED_RIGHT_ON   CON 103
+SET_LED_RIGHT_OFF  CON 104
+SET_LED_ALL_ON     CON 105
+SET_LED_ALL_OFF    CON 106
+SET_LED_ALL        CON 107 ' Format: 107 LeftLEDstate CenterLEDstate RightLEDstate 0 0 0 0 0
+SET_MOTORS_OFF     CON 108 ' Format: 108 0 0 0 0 0 0 0 0
+SET_MOTORS         CON 109 ' Format: 109 rightmotor leftmotor 0 0 0 0 0 0, Notes: 0 = full speed backwards, 100 = stop, 200 = full speed forward
+SET_NAME1          CON 110 ' Format: 110 char1 char2 char3 char4 char5 char6 char7 char8
+SET_NAME2          CON 119 ' Format: 119 char9 char10 char11 char12 char13 char14 char15 char16
+SET_LOUD           CON 111
+SET_QUIET          CON 112
+SET_SPEAKER        CON 113 ' Format: 113 DurationHighByte DurationLowByte FreqHighByte FreqLowByte
+SET_SPEAKER_2      CON 114 ' Format: 114 DurationHighByte DurationLowByte Freq1HighByte Freq1LowByte Freq2HighByte Freq2LowByte
+
+SET_PASS1          CON 55  ' Format: 55 PASS1 PASS2 ... PASS8
+SET_PASS2          CON 56  ' Format: 56 PASS9 PASS2 ... PASS16
+
+TIMEOUT            CON 1000 ' in ms.  How often to broadcast name (if sendName) or flash lights
+PACKET_LENGTH      CON 9
+DATA_LENGTH        CON 8
+
+'BAUD              CON 84  '9600 baud
+BAUD               CON 6  '38400 baud
+
+''''''''''''''''''''''''''''''''''''''''''
+' I/O Pin Declarations
+'    Constant for the Scribbler robot
+''''''''''''''''''''''''''''''''''''''''''
+LightRightPin    PIN 0
+LightCenterPin   PIN 1
+LightLeftPin     PIN 2
+LineEnablePin    PIN 3
+LineRightPin     PIN 4
+LineLeftPin      PIN 5
+ObsRxPin         PIN 6
+StallPin         PIN 7
+LedRightPin      PIN 8
+LedCenterPin     PIN 9
+LedLeftPin       PIN 10
+SpeakerPin       PIN 11
+MotorRightPin    PIN 12
+MotorLeftPin     PIN 13
+ObsTxRightPin    PIN 14
+ObsTxLeftPin     PIN 15
+SerialPin        CON 16
+
+'''''''''''''''''''''''''''''
+' Global Variables
+'''''''''''''''''''''''''''''
+inCmd    VAR Byte(PACKET_LENGTH)
+quiet    VAR Bit
+sendName VAR Bit
+echoMode VAR Bit
+
+'''''''''''''''''''''''''''''
+' Temp Variables
+'''''''''''''''''''''''''''''
+var1    VAR Word
+var2    VAR Word
+var3    VAR Word
+temp    VAR Byte
+temp2   VAR Byte
+
+'''''''''''''''''''''''''''''''''''
+' Software reset start location
+'''''''''''''''''''''''''''''''''''
+SoftwareReset:
+
+''''''''''''''''''''''''''
+' I/O Initialization
+''''''''''''''''''''''''''
+HIGH LightRightPin
+HIGH LightCenterPin
+HIGH LightLeftPin
+HIGH LineEnablePin
+LOW LedRightPin
+LOW LedCenterPin
+LOW LedLeftPin
+LOW SpeakerPin
+LOW MotorRightPin
+LOW MotorLeftPin
+LOW ObsTxRightPin
+LOW ObsTxLeftPin
+
+''''''''''''''''''''''''''''''
+' Variable Initialization
+''''''''''''''''''''''''''''''
+inCmd(PACKET_LENGTH-1) = 0
+'quiet = 0
+'sendName = 1
+'echoMode = 1
+
+READ echoData, inCmd(0)
+echoMode = inCmd(0) & %00000001
+READ sendData, inCmd(0)
+sendName = inCmd(0) & %00000001
+READ quietData, inCmd(0)
+quiet = inCmd(0) & %00000001
+
+''''''''''''''''''''''''''''''
+' Turn on chirp
+''''''''''''''''''''''''''''''
+IF (quiet = 0) THEN
+  PAUSE 50
+  HIGH LedLeftPin
+  FREQOUT SpeakerPin, 80, 784
+  HIGH LedCenterPin
+  FREQOUT SpeakerPin, 80, 880
+  HIGH LedRightPin
+  FREQOUT SpeakerPin, 80, 698
+  LOW LedRightPin
+  FREQOUT SpeakerPin, 80, 349
+  LOW LedCenterPin
+  FREQOUT SpeakerPin, 80, 523
+  LOW LedLeftPin
+ELSE
+  PAUSE 50
+  HIGH LedLeftPin
+  HIGH LedCenterPin
+  HIGH LedRightPin
+  LOW LedRightPin
+  LOW LedCenterPin
+  LOW LedLeftPin
+ENDIF
+'''''''''''''''''''''''
+' Main loop
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'This is what gets called when the robot has no commumications with PC
+INIT:
+  ' Used to flash the middle LED with short timeout:
+  IF (LedCenterPin = 1) THEN LedCenterPin = 0 ELSE LedCenterPin = 1
+
+  ' Send characteristic string and name
+  IF (sendName = 1) THEN
+    FOR temp = 0 TO (PACKET_LENGTH - 1)
+      READ temp + nameData, inCmd(temp)
+    NEXT
+    SEROUT SerialPin, BAUD, ["IPRE", STR inCmd\PACKET_LENGTH, 0]
+  ENDIF
+
+BEGIN:
+  SERIN SerialPin, BAUD, TIMEOUT, INIT, [STR inCmd\PACKET_LENGTH]
+  LOOKDOWN inCmd(0), = [GET_STATE, GET_LINE_RIGHT, GET_LINE_LEFT, GET_LIGHT_LEFT, GET_LIGHT_CENTER, GET_LIGHT_RIGHT,  GET_IR_LEFT, GET_IR_RIGHT, GET_STALL, GET_NAME1, GET_NAME2, GET_PASS1, GET_PASS2,  SET_MOTORS_OFF, SET_MOTORS, SET_SPEAKER, SET_SPEAKER_2, SET_LED_LEFT_ON, SET_LED_LEFT_OFF, SET_LED_CENTER_ON, SET_LED_CENTER_OFF, SET_LED_RIGHT_ON, SET_LED_RIGHT_OFF, SET_NAME1, SET_NAME2, SET_PASS1, SET_PASS2, SET_LED_ALL_ON, SET_LED_ALL_OFF, GET_LIGHT_ALL, GET_IR_ALL, GET_LINE_ALL, GET_ALL, SET_LOUD, SET_QUIET, GET_ALL_BINARY, SOFT_RESET,    SET_LED_ALL, GET_INFO, GET_DATA, SET_DATA, SET_SINGLE_DATA, SET_ECHO_MODE], temp
+  BRANCH temp,         [GetState,  GetLineRight,   GetLineLeft,   GetLightLeft,   GetLightCenter,   GetLightRight,    GetObsLeft,  GetObsRight,  GetStall,  GetName1,  GetName2, GetPass1, GetPass2,  MotorsOff,      Motors,     SetSpeaker,  SetSpeaker2,   OnLeftLED,       OffLeftLED,       OnCenterLED,       OffCenterLED,       OnRightLED,       OffRightLED,       SetName1,  SetName2, SetPass1, SetPass2,  OnAllLED,       OffAllLED,       GetLightAll,   GetIRAll,   GetLineAll,   GetAll,  SetLoud,  SetQuiet,  GetAllBinary,   SoftwareReset, SetLedAll,   GetInfo,  GetData,  SetData, SetSingleData, SetEchoMode]
+TOP:
+  ' echo command to tell we are done
+  IF (echoMode = 1)     THEN SEROUT SerialPin, BAUD, [inCmd(0)]
+  IF (LedCenterPin = 1) THEN LedCenterPin = 0 ELSE LedCenterPin = 1
+  sendName = 0
+GOTO BEGIN
+
+
+'''''''''''''''''''''''
+' Subroutines
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+SetQuiet:
+   quiet = 1
+   WRITE quietData, 1
+   GOTO GetAll
+
+SetLoud:
+   quiet = 0
+   WRITE quietData, 0
+   GOTO GetAll
+
+GetState:
+     SEROUT SerialPin, BAUD, [INL, OUTH]
+     GOTO TOP
+
+GetLineRight:
+     SEROUT SerialPin, BAUD, [LineRightPin]
+     GOTO TOP
+
+GetLineLeft:
+     SEROUT SerialPin, BAUD, [LineLeftPin]
+     GOTO TOP
+
+GetLineAll:
+     SEROUT SerialPin, BAUD, [LineLeftPin, LineRightPin]
+     GOTO TOP
+
+GetLightLeft:
+     HIGH LightLeftPin
+     PAUSE 3
+     RCTIME LightLeftPin, 1, var3
+     SEROUT SerialPin, BAUD, [var3.HIGHBYTE, var3.LOWBYTE]
+     GOTO TOP
+
+GetLightCenter:
+     HIGH LightCenterPin
+     PAUSE 3
+     RCTIME LightCenterPin, 1, var3
+     SEROUT SerialPin, BAUD, [var3.HIGHBYTE, var3.LOWBYTE]
+     GOTO TOP
+
+GetLightRight:
+     HIGH LightRightPin
+     PAUSE 3
+     RCTIME LightRightPin, 1, var3
+     SEROUT SerialPin, BAUD, [var3.HIGHBYTE, var3.LOWBYTE]
+     GOTO TOP
+
+GetLightAll:
+     HIGH LightLeftPin
+     HIGH LightCenterPin
+     HIGH LightRightPin
+     PAUSE 3
+     RCTIME LightLeftPin, 1, var3
+     RCTIME LightCenterPin, 1, var2
+     RCTIME LightRightPin, 1, var1
+     SEROUT SerialPin, BAUD, [var3.HIGHBYTE, var3.LOWBYTE, var2.HIGHBYTE, var2.LOWBYTE, var1.HIGHBYTE, var1.LOWBYTE]
+     GOTO TOP
+
+GetObsRight:
+     FREQOUT ObsTxRightPin, 1, 40500
+     temp = ObsRxPin
+     LOW ObsTxRightPin
+     SEROUT SerialPin, BAUD, [temp]
+     GOTO TOP
+
+GetObsLeft:
+     FREQOUT ObsTxLeftPin, 1, 40500
+     temp = ObsRxPin
+     LOW ObsTxLeftPin
+     SEROUT SerialPin, BAUD, [temp]
+     GOTO TOP
+
+GetIRAll:
+     FREQOUT ObsTxLeftPin, 1, 40500
+     temp = ObsRxPin
+     LOW ObsTxLeftPin
+
+     FREQOUT ObsTxRightPin, 1, 40500
+     temp2 = ObsRxPin
+     LOW ObsTxRightPin
+
+     SEROUT SerialPin, BAUD, [temp, temp2]
+     GOTO TOP
+
+GetAll:
+     'IR
+     FREQOUT ObsTxLeftPin, 1, 40500
+     temp = ObsRxPin
+     LOW ObsTxLeftPin
+
+     FREQOUT ObsTxRightPin, 1, 40500
+     temp2 = ObsRxPin
+     LOW ObsTxRightPin
+
+     'Light
+     HIGH LightLeftPin
+     HIGH LightCenterPin
+     HIGH LightRightPin
+     PAUSE 3
+     RCTIME LightLeftPin, 1, var3
+     RCTIME LightCenterPin, 1, var2
+     RCTIME LightRightPin, 1, var1
+
+     'Line
+     SEROUT SerialPin, BAUD, [temp, temp2, var3.HIGHBYTE, var3.LOWBYTE,
+                           var2.HIGHBYTE, var2.LOWBYTE, var1.HIGHBYTE, var1.LOWBYTE,
+                           LineLeftPin, LineRightPin, StallPin]
+     GOTO TOP
+
+
+'0x000 IRLeft IRRight Stall LineLeft LineRight
+GetAllBinary:
+
+  temp = 0
+
+  FREQOUT ObsTxLeftPin, 1, 40500
+  temp2 = ObsRxPin
+  LOW ObsTxLeftPin
+
+  temp = (temp2 & 1) << 4
+
+  FREQOUT ObsTxRightPin, 1, 40500
+  temp2 = ObsRxPin
+  LOW ObsTxRightPin
+
+  temp = temp | ((temp2 & 1) << 3)
+
+  temp = temp | (StallPin << 2)
+
+  temp = temp | (LineLeftPin << 1)
+
+  temp = temp | LineRightPin
+
+  SEROUT SerialPin, BAUD, [temp]
+  GOTO TOP
+
+
+GetStall:
+     SEROUT SerialPin, BAUD, [StallPin]
+     GOTO TOP
+
+GetName1:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        READ temp + nameData, inCmd(temp)
+     NEXT
+     SEROUT SerialPin, BAUD, [STR inCmd\DATA_LENGTH]
+     GOTO TOP
+
+GetName2:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        READ temp + nameData + 8, inCmd(temp)
+     NEXT
+     SEROUT SerialPin, BAUD, [STR inCmd\DATA_LENGTH]
+     GOTO TOP
+
+SetName1:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        WRITE temp + nameData, inCmd(1 + temp)
+     NEXT
+     GOTO GetAll
+
+SetName2:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        WRITE temp + nameData + 8, inCmd(1 + temp)
+     NEXT
+     GOTO GetAll
+
+
+GetPass1:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        READ temp + passData, inCmd(temp)
+     NEXT
+     SEROUT SerialPin, BAUD, [STR inCmd\DATA_LENGTH]
+     GOTO TOP
+
+GetPass2:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        READ temp + passData + 8, inCmd(temp)
+     NEXT
+     SEROUT SerialPin, BAUD, [STR inCmd\DATA_LENGTH]
+     GOTO TOP
+
+SetPass1:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        WRITE temp + passData, inCmd(1 + temp)
+     NEXT
+     GOTO GetAll
+
+SetPass2:
+     FOR temp = 0 TO (DATA_LENGTH - 1)
+        WRITE temp + passData + 8, inCmd(1 + temp)
+     NEXT
+     GOTO GetAll
+
+MotorsOff:
+     PULSOUT MotorRightPin, 2000
+     PULSOUT MotorLeftPin, 2000
+     GOTO GetAll
+
+     'FREQOUT Pin, Duration, Freq1, Freq2
+SetSpeaker:
+     var1 = inCmd(1)
+     var1 = (var1 << 8) | inCmd(2)
+     var2 = inCmd(3)
+     var2 = (var2 << 8) | inCmd(4)
+     IF (quiet = 1) THEN
+      FREQOUT SpeakerPin, var1, $00
+     ELSE
+      FREQOUT SpeakerPin, var1, var2
+     ENDIF
+     GOTO GetAll
+
+SetSpeaker2:
+     var1 = inCmd(1)
+     var1 = (var1 << 8) | inCmd(2)
+
+     var2 = inCmd(3)
+     var2 = (var2 << 8) | inCmd(4)
+
+     var3 = inCmd(5)
+     var3 = (var3 << 8) | inCmd(6)
+
+     IF (quiet = 1) THEN
+      FREQOUT SpeakerPin, var1, $00
+     ELSE
+      FREQOUT SpeakerPin, var1, var2, var3
+     ENDIF
+     GOTO GetAll
+
+Motors:
+      var1 = inCmd(1) ' right motor
+      var2 = inCmd(2) ' left motor
+
+'Fudge motor values based upon direction & speed:
+'
+
+READ ipreData+0, temp  ' Fudge 0
+'Fudge the left motor when going forward. (51-100%)
+IF (temp > 127) AND (var2 > 150) THEN
+  var2 = var2 - (temp - 127)
+ENDIF
+
+'Fudge the right motor when going foward! (51-100%)
+IF (temp < 127) AND (var1 > 150) THEN
+   var1 = var1 - (127 - temp )
+ENDIF
+
+READ ipreData+1, temp  ' Fudge 1
+'Fudge the left motor when going forward (0-50%)
+IF (temp > 127) AND (150 >= var2) AND ( var2 > 100) THEN
+  var2 = var2 - (temp - 127)
+ENDIF
+'Fudge the right motor when going forward (0-50%)
+IF (temp < 127) AND (150 >= var1) AND (var1 > 100) THEN
+   var1 = var1 - (127 - temp )
+ENDIF
+
+READ ipreData+2, temp  ' Fudge 2
+'Backwards travel is just like forwards travel, but reversed!
+'fudge the right motor when going backwards (0-50%)
+IF ( temp > 127) AND (100 > var1) AND (var1 >= 50) THEN
+  var1 = var1 + ( temp - 127)
+ENDIF
+
+'fudge the left motor when going backwards.  (0-50% )
+IF (temp < 127) AND (100 > var2) AND ( var2 >= 50) THEN
+  var2 = var2 + (127 - temp)
+ENDIF
+
+READ ipreData+3, temp  ' Fudge 3
+'fudge the right motor when going backwards (51-100%)
+IF ( temp > 127) AND (var1 < 50) THEN
+  var1 = var1 + (temp - 127)
+ENDIF
+'fudge the left motor when going backwards (51-100%)
+IF (temp < 127) AND (50 > var2) THEN
+  var2 = var2 + ( 127 - temp )
+ENDIF
+
+      var1 = (var1 + 100) * 10
+      var2 =  (var2 + 100) * 10
+
+      PULSOUT MotorRightPin, var1
+      PULSOUT MotorLeftPin,  var2
+      GOTO GetAll
+
+' Old and busted code to just make the motors do what they
+' were told!
+'     var1 = (inCmd(1) + 100) * 10
+'     var2 = (inCmd(2) + 100) * 10
+'     PULSOUT MotorRightPin, var1
+'     PULSOUT MotorLeftPin, var2
+'     GOTO GetAll
+
+OnLeftLED:
+     LedLeftPin = 1
+     GOTO GetAll
+
+OffLeftLED:
+     LedLeftPin = 0
+     GOTO GetAll
+
+OnCenterLED:
+     LedCenterPin = 1
+     GOTO GetAll
+
+OffCenterLED:
+     LedCenterPin = 0
+     GOTO GetAll
+
+OnRightLED:
+     LedRightPin = 1
+     GOTO GetAll
+
+OffRightLED:
+     LedRightPin = 0
+     GOTO GetAll
+
+OnAllLED:
+     LedLeftPin = 1
+     LedRightPin = 1
+     LedCenterPin = 1
+     GOTO GetAll
+
+OffAllLED:
+     LedLeftPin = 0
+     LedRightPin = 0
+     LedCenterPin = 0
+     GOTO GetAll
+
+SetLedAll:
+  LedLeftPin = inCmd(1) & %00000001
+  LedCenterPin = inCmd(2) & %00000001
+  LedRightPin = inCmd(3) & %00000001
+  GOTO GetAll
+
+GetData:
+  FOR temp = 0 TO (DATA_LENGTH - 1)
+    READ temp + ipreData, inCmd(temp)
+  NEXT
+  SEROUT SerialPin, BAUD, [STR inCmd\DATA_LENGTH]
+  GOTO TOP
+
+SetData:
+  FOR temp = 0 TO (DATA_LENGTH - 1)
+     WRITE temp + ipreData, inCmd(1 + temp)
+  NEXT
+  GOTO GetAll
+
+SetSingleData:
+   temp = inCmd(1)
+   WRITE temp + ipreData, inCmd(2)
+   GOTO GetAll
+
+SetEchoMode:
+  echoMode = inCmd(1) & %00000001
+  WRITE echoData, inCmd(1)
+  WRITE sendData, inCmd(1)
+  GOTO GetAll
+
+GetInfo:
+  SEROUT SerialPin, BAUD, ["Robot-Version:2.6.1,Robot:Scribbler,Mode:Serial", LF]
+  GOTO TOP
+

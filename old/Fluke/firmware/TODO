@@ -1,0 +1,20 @@
+
+ - Make the byte code processing  UART0/UART1 configurable 
+
+   - So we can connect the fluke to a computer serial port
+     over UART0 (the +/- 12V serial port) and grab images
+     over the wired link.  Also do something useful with
+     UART1 (bluetooth uart).
+
+ - Use watchdog to reset if firmware hangs
+ - Battery LED indicator should be based on timer
+ - IR can be improved (working on IR communication now @ GT)
+
+ - GET_INFO is awful - preserves backwards compatibility with
+   myro (myro can use fluke by itself, a scribbler by itself, or
+   a combo of both).
+
+ - Port to iRobot Create
+
+ - Improve camera code
+ - JPEG compression of images

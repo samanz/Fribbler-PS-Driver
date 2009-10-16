@@ -1,0 +1,16 @@
+The Scribbler project is in three sections.
+
+First, libscribbler.a is a library that together with the include file scribbler.h
+allow C++ programs to access the Scribbler/Fluke over the provided bluetooth link.
+This library is documented in the libman document.
+
+Second, visual is a visual simulation of a Scribbler/Fluke robot in a simple 
+environment. Versions of visual exist for Linux, Mac OS X, and Windows XP.
+It is intended that the student take home one of these versions in order to
+gain experience in using C++ and the libscribbler interface in a relaxed environment.
+Use of visual is documented in the visual document, and start.doc provides an 
+introduction to libscribbler and visual.
+
+Third, instructions are given to allow a student to remotely program a Scribbler/Fluke
+and watch the results over the internet. This will allow the student limited access to
+a Scribbler/Fluke outside of class.

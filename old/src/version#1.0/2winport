@@ -1,0 +1,4 @@
+cp system.h.winport system.h
+cp WIN.PORT OS.COMM
+make clean
+make

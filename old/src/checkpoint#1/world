@@ -1,0 +1,22 @@
+LINE (40, 40), (70, 70), (100, 200)
+LINE (200, 200), (300, 300)
+WORLD
+
+
+       XXXXXXXXXXXXXXXX      XXXXXXXXXXXX
+XXXXXXXXXXXXXX                        XX
+        X                             X
+        X                             X
+       X                              X
+      X                               X
+     X                                X
+     X               LL               X
+     X                L              X
+     X                               X
+     X                              X
+     X                             X
+     X                            X
+     X                           X
+     X                                   X
+     X                               
+     X                                X

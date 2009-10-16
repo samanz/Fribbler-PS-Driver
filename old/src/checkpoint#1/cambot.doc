@@ -1,0 +1,31 @@
+On The server
+USB camera, USB bluetooth
+
+/etc/bluetooth/rfcomm.conf contains the following
+rfcomm0 {
+	# Automatically bind the device at start up
+	bind yes;
+	# Bluetooth address of the device
+	device 00:1E:19:01:07:47;
+	#BorgDongle
+	# RFCOMM channel for the connection
+	channel  1;
+	# Description of the connection
+	comment "IPRE Scribbler Dongle 245782";
+}
+_______________________________________________________
+
+firewall configured to allow access for everyone on
+port 22 (ssh) and 8070 (TCP only) for the video
+_______________________________________________________
+computer configured for static ip 192.168.1.11
+_______________________________________________________
+router configured for port forwarding on ports
+22 and 8070 to 192.168.1.11
+_______________________________________________________
+run the following commands
+
+chmod 666 /dev/video0
+vlc v4l2:// v4l-vdev=/dev/video0 --sout="#transcode{vcodec=mp4v}:duplicate{dst=display,dst=std{access=http,mux=ogg,dst=:8070}}" --ttl 12
+
+from try i.e. ./try

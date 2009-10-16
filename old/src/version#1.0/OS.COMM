@@ -1,0 +1,13 @@
+#specify the OS and comms method
+SERIAL = SocSerial
+#SERIAL = WinSerial
+#SERIAL = PosixSerial
+#SERIAL = WinsocSerial
+
+FILE   = PosixFile
+#FILE   = WinFile
+
+INCS =
+LIBS =
+
+

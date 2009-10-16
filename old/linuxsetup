@@ -1,0 +1,4 @@
+cp src/Posix.XBee src/MyOS.XBee
+cp src/linuxHeader src/SVR.h
+
+

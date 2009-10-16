@@ -1,0 +1,8 @@
+General
+	The Scribbler/Fluke is a combination of two very different devices. Although
+there is some overlap in functionality each has it's own idiosyncratic way of dealing
+with the common functionality. I did not find a way to impose a common approach and
+so the interface provided explicitly represents which device we are talking to, either
+the Scribbler, or the Dongle (Fluke). If there is any ambiguity the interface specifically
+states which device (Scribbler or Dongle) is involved. 
+

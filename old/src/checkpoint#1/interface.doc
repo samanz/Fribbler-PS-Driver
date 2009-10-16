@@ -1,0 +1,200 @@
+In General the functions return a int indicating the success or
+failure of the function. 
+Zero indicates the function failed, Non Zero that it succeeded.
+Functions that return Data pointers return NULL on error.
+Exception! 	
+long	getWindowLight(int win);
+returns the number of on pixels in win
+The following functions that access the local copies of the 
+sensors are always successfull and so return the specified 
+specified sensors value.
+/****************************************************************/
+/* Functions to access the local copies of Scribbler sensors	*/
+/*								*/
+/* The local copies of Scribbler sensors are updated explicitly	*/
+/* by updateScribblerSensors and implicitly by the setScribbler	*/
+/* functions							*/
+/****************************************************************/
+	int	scribblerLeftIR();	
+	int	scribblerRightIR();	
+	int	scribblerLeftLight();	
+	int	scribblerCenterLight();	
+	int	scribblerRightLight();	
+	int	scribblerLineLeft();	
+	int	scribblerLineRight();	
+	int	scribblerStall();
+
+/****************************************************************/
+/* Functions that directly access the Scribbler sensors		*/
+/* The return value is success or failure			*/
+/* on success the value is returned in the reference parameter	*/
+/*								*/
+/* These also update the local values of Scribbler sensors	*/
+/****************************************************************/
+	int     updateScribblerSensors();
+	int	readScribblerLeftIR(int &);	
+	int	readScribblerRightIR(int &);	
+	int	readScribblerLeftLight(int &);	
+	int	readScribblerCenterLight(int &);	
+	int	readScribblerRightLight(int &);	
+	int	readScribblerLineLeft(int &);	
+	int	readScribblerLineRight(int &);	
+	int	readScribblerStall(int &);
+/****************************************************************/
+/* getScribblerIR is an exception to the rule			*/
+/* return code is the value of the IR specified by the parameter*/
+/****************************************************************/
+	int	getScribblerIR(int);
+
+/****************************************************************/
+/* Functions that turn on or off the LEDS on the Scribbler	*/
+/****************************************************************/
+	int	setScribblerLeftLed(int value);
+	int	setScribblerCenterLed(int value);
+	int	setScribblerRightLed(int value);
+	int	setScribblerAllLeds(int value);
+	int	setScribblerLeds(int left, int center, int right);
+
+/****************************************************************/
+/* Functions that effect the motors				*/
+/* left and right are power to the left and right motors	*/
+/* in range of -100 to +100					*/
+/* negative numbers in reverse					*/
+/* stop is equivalent to drive(0, 0, 0)				*/
+/*								*/
+/* Note. if setForwardness has specified Fluke Forward then	*/
+/* the Fluke will reverse and turn around left and right	*/
+/****************************************************************/
+	int	drive(int left, int right, int duration = 0);
+      	int     stop();
+
+
+/****************************************************************/
+/* Functions that directly access the Scribbler memory items	*/
+/****************************************************************/
+  	int	setScribblerData(char data[8]);
+	int	getScribblerData(char data[8]);
+	int	setScribblerName(char name[16]);
+	int	getScribblerName(char name[16]);
+	int	setScribblerPass(char pass[16]);
+	int	getScribblerPass(char pass[16]);
+
+/****************************************************************/
+/* Function to make a sound					*/
+/****************************************************************/
+        int     beep(int freq, int duration);
+
+/****************************************************************/
+/* Function to measure the strength of the Scribblers Batteries	*/
+/****************************************************************/
+	int	getScribblerBattery(int &battery);
+
+/****************************************************************/
+/* Functions that access the Flukes camera			*/
+/* 								*/
+/* generally the takePhotoJPEG is the one you want or perhaps	*/
+/* getCompressedBitmap with setBitmapParams			*/
+/* functions that return a pointer to a Data return NULL on	*/
+/* on failure							*/
+/****************************************************************/
+	Data	*takePhotoJPEG();
+	int 	setBitmapParams( unsigned char delay, unsigned char thresh,
+			YUVRange &range);
+	Data	*getCompressedBitmap();
+	Data	*grabGrayArray();
+	Data	*readJpegHeader();
+	Data	*readJpegScan();
+	Data	*readJpegGrayHeader();
+	Data	*readJpegGrayScan();
+	Data	*getImage();
+	Data	*takePhotoGrayJPEG();
+	int	getCamParam(int id, int &val);
+	int	setCamParam(int id, int val);
+	int	setWhiteBalance(int );
+	int	setColorId(int Id, YUVRange &range);
+
+/****************************************************************/
+/* Functions that access restricted regions of the visual field	*/
+/* 								*/
+/* The Fluke supports 4 windows, rectangles on the visual field */
+/* The Blob functions return a count of the on pixels and the	*/
+/* coordinates of the "center"					*/
+/****************************************************************/
+	int	setWindow(int id, VidWindow &win,
+			  int xstep, int ystep);
+	Data	*getWindow(int id);
+/****************************************************************/
+/* getWindowLight is an exception to the general rule on return	*/
+/* codes. It returns the number of on pixels in the window	*/
+/****************************************************************/
+	long	getWindowLight(int win);
+	int	getBlob(int &x, int &y);
+	int	getBlobWindow(int wind, int &x, int &y);
+
+
+/****************************************************************/
+/* Functions to access the IR capability of the Dongle		*/
+/*								*/
+/* The IR capability of the Dongle returns the "raw" values	*/
+/* this is in contrast to the "cooked" IR on the Scribbler	*/
+/* In general, you setDonglePowerIR to some useful value,	*/
+/* usually about 134 and then getDongleIR returns the count of	*/
+/* pulses received over a fixed time. The higher the count	*/
+/* the closer the object					*/
+/* if the power is too low the count will always be zero if	*/
+/* the power is too high the count will always be high		*/
+/****************************************************************/
+	int	getDongleIR(int);
+	int	setDonglePowerIR(int);
+
+
+/****************************************************************/
+/* Function get a string describing the Scribbler		*/
+/****************************************************************/
+	int	getVersion(char *ver);
+
+/****************************************************************/
+/* Function get a string describing the Scribbler/Fluke combo	*/
+/****************************************************************/
+	int	getInfo(char *);
+
+
+/****************************************************************/
+/* Function sets the Flukes idea of which way is the front	*/
+/*								*/
+/* 0 the Scribbler is facing forward				*/
+/* 1 the Fluke is facing forward				*/
+/****************************************************************/
+	int	setForwardness(int d);
+
+
+
+/****************************************************************/
+/* Function sets the power to the Flukes dimmer LED		*/
+/****************************************************************/
+	int	setDimmerLED(int);
+
+
+
+
+/****************************************************************/
+/* Virtual functions from Robot interface			*/
+/* ignore these							*/
+/****************************************************************/
+	BlobList	*getBlobList(int id);
+	int		isObstacleAhead();
+
+
+  
+
+
+/****************************************************************/
+/* The Following functions have not been implemented on Fluke	*/
+/****************************************************************/
+//	int	setEmittersIR(int);
+//	int	getMessageIR(char *buf);
+//	int	sendMessageIR(char const buf[]);
+
+};
+
+#endif

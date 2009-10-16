@@ -1,0 +1,109 @@
+2posixsock			script file to change to OS Posix and COMMS Sockets
+2posixport			script file to change to OS Posix and COMMS Serial Port
+
+
+
+const.h				Header file defines the IPRE codes
+data.cpp			Implementation of Data class
+data.h				Header for Data class
+files.doc			This file
+
+log				The log file of the last run of video
+
+camera.cpp			Implementation of classes useful for camera's
+camera.h			Header of classes useful for camera's
+
+
+gamengin.cpp			Implementation of a SDL game engine
+gamengin.h			Implementation of a SDL game engin
+
+				Images used by video the Virtual Scribbler
+logo.gif			The Agents Lab logo shown in TRHC
+fluke.jpg			Fluke image shown CRHS
+scribbler.jpg			Scribbler image shown BRHC
+
+PosixFile.cpp			Implementation of FileIn and FileOut for Posix compliant OS
+PosixFile.h			Header of FileIn and FileOut for Posix compliant OS
+PosixSerial.cpp			Implementation of serial port I/O for Posix compliant OS
+PosixSerial.h			Header of serial port I/O for Posix compliant OS
+posixSoc.cpp			Implementation of Socket I/O for POSIX complient OS
+posixSoc.h			Header of Socket I/O for POSIX complient OS
+
+
+
+robot.cpp			Implementation of virtual class Robot
+robot.h				Header of virtual class Robot
+
+				Sample Files used by video to approximate Scribbler/Fluke behaviour
+sampleBeep.wav
+samplebitmap.dat
+samplechead.dat
+samplecscan.dat
+sampleghead.dat
+samplegrayarray.dat
+samplegscan.dat
+sampleimage.dat
+samplephoto.jpeg
+
+
+
+scribbler.cpp			Implementation of Scribbler interface
+scribbler.h			Implementation of Scribbler interface
+
+				Source for programs that were useful at some point
+photo.cpp			source for photo
+scrib.cpp			
+sensorf.cpp
+sensors.cpp
+wander2.cpp
+wander.cpp
+wanderf.cpp
+SocServer.cpp
+
+
+
+				programs that were useful at some point
+sensorf
+sensors
+ssensors
+SocServer
+wander
+wander2
+wanderf
+photo				Program gets a number of try data files that can be changed 
+				to sample datafiles
+
+
+
+serial.h			Header for Serial class
+SocSerial.cpp			Implementation of SocSerial for posic compliant OS
+SocSerial.h			Header of SocSerial for posic compliant OS
+
+
+
+
+system.h			The system.h for our current build
+system.h.posixport		system.h file for posix serial port communication
+system.h.posixsoc		system.h file for posix socket communication
+system.h.winport		system.h file for Windows XP serial port communication
+system.h.winsock		system.h file for Windows XP Winsock communication
+
+
+
+video.cpp			Source for the Virtual Scribbler server
+VirtScribbler.h			Header file for VirtScribbler
+scribblercmd.cpp		Implementation of the Scribbler commands in VirtScribbler
+flukecmd.cpp			Implementation of the Fluke commands in VirtScribbler
+
+
+
+
+WinFile.cpp			Implementation of FileIn FileOut for Windows XP
+WinFile.h			Header of FileIn FileOut for Windows XP
+
+WinSerial.cpp			Implementation of Serial port communication 
+WinSerial.h			Header of Serial port communication
+
+WinsocSerial.cpp		Implementation of Serial communication via Winsock
+WinsocSerial.h			Header of Serial communication vis Winsock
+world				Text file that defines the Robot World

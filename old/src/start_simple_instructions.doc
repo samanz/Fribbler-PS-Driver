@@ -1,0 +1,456 @@
+Chapter 1:	Getting Started
+
+The following is about the simplest program possible with our interface and
+the Scribbler/Fluke.
+------------------------------------------------------------------------------------------
+
+#include "scribbler.h" 
+#include "system.h"
+#include <unistd.h>
+
+
+int	gDebugging = 0;
+
+
+PosixSerial	port(ADDRESS);
+
+Scribbler       robot(port); 
+
+int main( int argc, char *argv[])
+{
+	robot.drive(50, 50);
+
+	sleep(1);
+
+	robot.stop();
+
+    	return 0;   
+}
+	
+-------------------------------------------------------------------------------------------
+	I will briefly explain each line.
+
+#include "scribbler.h" 
+	This line brings in the definition of our interface
+
+#include "system.h"
+	This line brings in specifics of our operating system.
+	The contents of system.h are different on Windows from
+	that on Linux or Mac OS X systems.
+
+#include <unistd.h>
+	This line brings in the definition of the sleep function.
+
+int	gDebugging = 0;
+	This line turns off the special debugging code I have written.
+
+PosixSerial	port(ADDRESS);
+	This line creates a channel of communication we will use
+	to talk to the robot, it is specific to Linux or Mac OS X and 
+	the Physical Robot.
+
+Scribbler       robot(port); 
+	This line creates an object called robot that can manage the dialog
+	with the Scribbler, and tells it to use the port object we created
+	in the previous line to actually talk to the robot.
+
+int main( int argc, char *argv[])
+{
+	These two lines indicate the program entry point.
+
+robot.drive(50, 50);
+	This line invokes the drive member function of the scribbler interface.
+	The parameters indicate the speed of the left and right wheels respectively.
+
+sleep(1);
+	This line causes the computer to wait for a second.
+
+robot.stop();
+	This line invokes the stop member function of the scribbler interface.
+	This will stop the left and right wheels.
+	robot.drive(0, 0);
+	would have the same effect.
+
+return 0;   
+}
+	These two lines are the conventional termination of the main function.
+
+
+	All this should cause the robot to move forward a bit.
+
+	The line
+PosixSerial	port(ADDRESS); 
+	should be replaced with the line
+WinSerial	port(ADDRESS);
+	if we our OS is Windows and we want to control the Physical Robot or
+ClientSerial	port(ADDRESS);
+	on any OS if we want to control the Simulated Robot.
+
+	For the Physical Robot our interface will get the address of the Robot
+	from the environment variable ROBOT_ADDRESS.
+	N.B. on Windows a COM port of 10 or more must be specified as \\.\COMnn
+	where nn is the port number.
+
+
+ 
+	You should now be able to set up your system to work with the robot
+	(Physical or Simulated) you have. Do so and enter, compile and run 
+	the simplest program.
+	(At the end of this document there are detailed instructions for
+	this for same popular environments, see if yours is there)
+
+
+
+
+
+
+
+
+
+
+Did your Robot, Simulated or Physical, move forward a bit?
+
+It Did! 
+	Great! your development environment is correctly set up you can now go on
+to chapter 2 which introduces some other functions.
+
+It Did Not!
+	OK we have to modify your development environment.
+
+The failure could have occurred in the compiling, linking or running phases.
+If if failed in the compilation phase
+	- check you are specifying the correct directory for the includes
+
+
+If it failed in the linking phase
+	- check you are specifying the correct directory for object and lib files
+	- check you are linking in the correct library files
+	  On Windows: libscribbler.a libwsock.a libmingw32.a libmingwex.a
+		Check these exist on your system and they are correctly set up in
+		Project->Build options->linker settings->link libraries
+	  On *nix: libscribbler.a
+
+If it failed in the running phase
+	- is the Robot on and the batteries charged
+	- are you using the correct system and method of communication
+		examine system.h in \WinSrc it will tell you the OS the
+		code is made for and the type of your port object
+	
+	- if you are using Bluetooth
+		- is the Bluetooth Dongle plugged in
+		- is the Scribbler on
+		- have you set up Bluetooth for connecting to this robot
+		- are you set up for Serial Port communication
+		- are you correctly setting the ADDRESS variable
+			If on Windows and using a COM port > 9
+		  
+		  N.B. ROBOT_ADDRESS=\\.\COM13 is the correct format for
+		  specifing double digit COM ports this way.
+
+
+Keep on fixing above issues until Scribbler moves forward and then you
+can go to Chapter 2. But first make a note of the changes to your environment
+in case you need to do it again.
+
+Chapter 2:	Some useful functions
+
+	In the last chapter we saw the use of the drive function, here is its 
+prototype
+
+	int	drive(int left, int right, int duration = 0);
+
+the left and right parameters are the power to the left and right wheels, don't
+worry about the third parameter, it defaults to zero so you don't even have to
+specify it. Using different values for the left and right parameters you can
+get the robot to move forward, backup, spin, move in a circle or spiral etc
+and with using sleep functions can get the robot to draw geometric figures.
+
+       int     beep(int freq, int duration);
+
+will get the Scribbler to make a sound
+
+	robot.beep(512, 1000);
+
+makes a beep for about a second. (Note we specify the member function beep
+to be called on the object robot with parameters 512 and 1000).
+
+	The Fluke Dongle has a camera that you can use to take pictures and
+save on your computer. The prototype of one member function that does this is
+
+	Data	*takePhotoJPEG();
+
+notice that the member function returns a pointer to a object of type Data.
+Here is a snippet of code that takes a picture and saves it to your disk
+in a file called test.jpeg
+
+	Data	*jpeg;
+	FileOut	*file;
+
+	jpeg = robot.takePhotoJPEG();
+	if (jpeg)
+	{
+		file = new FileOut("test.jpeg");
+		jpeg->write(*file, 0);
+		delete file;
+	}
+
+See if you can follow the code and say why each line is there and what it does.
+The Data class takes care of all the details of handling data and allows the
+user to not worry (or perhaps not even know) about these details. If you are the
+kind of person that likes to know "what's going on under the hood" you can
+examine the Data object definition in data.h and implementation in data.cpp.
+The FileOut class hides some OS dependent code, the source for it is available
+in your system.
+
+	The scribbler has a number of low level sensors which can tell you about
+the area immediately about the robots current location. Our interface keeps track
+of these sensors and the following is the prototype of the member function that
+refreshes our local copies of the sensors.
+
+        int     updateScribblerSensors();
+
+once you have updated our local copies of the scribbler sensors, you can access
+them with the following member functions
+
+	int	scribblerLeftIR();	
+	int	scribblerRightIR();	
+	int	scribblerLeftLight();	
+	int	scribblerCenterLight();	
+	int	scribblerRightLight();	
+	int	scribblerLineLeft();	
+	int	scribblerLineRight();	
+	int	scribblerStall();
+
+The IR functions return 0 or 1. 
+	0 indicates an obstacle in that direction
+	1 indicates that direction is clear
+The Light functions return a integer that specifies how much light that sensor detects.
+	0 id dark, and it gets bigger as it gets brighter 
+The LineLeft and LineRight functions return 0 or 1.
+	0 indicates the robot did not detect a line on the side specified
+	1 indicates the robot did detect a line on the side specified
+The Stall function returns 0 or 1.
+	0 indicates the robot's motors are acting as specified
+	1 indicates the robot has run in to something and the motors are not moving
+	  the Scribbler, i.e. the Scribbler has stalled.
+ 
+	This is a powerful subset of Scribbler member functions for learning C++,
+and basic robotics.
+	
+
+
+
+
+
+<Set up for Code::Blocks Windows XP for Physical Robot>
+If your computer doesn't have BlueTooth plug in the BlueTooth Dongle.
+Click on the BlueTooth icon.
+Turn on your Scribbler/Fluke
+Click Add
+Indicate your device is set up and ready
+Click next
+Select Your Fluke by its ID # printed on it
+Click Next
+Click Use the passkey found in the documentation
+Enter 1234 in the appropriate box
+Click Next
+Write down the Outgoing Port, for example COM13
+Click Finish
+
+Click Start
+Click Control Panel
+Click Switch To Classic View
+Click System
+Click Advanced
+Click Environment Variables
+In the User Variables section
+Enter ROBOT_ADDRESS in Variable Name and
+your Outgoing port Id in Variable Value
+N.B. COM ports 1 to 9 can be entered as COMn
+BUT COM ports greater than 9 must be entered as
+\\.\COMnn  where nn is the port number.
+For example if our Outgoing port was COM13
+we would enter \\.\COM13 in Variable Value
+Click OK
+Click OK
+Click OK
+Kill Control Panel 
+
+
+In CodeBlocks open a new project.
+In Project->Build options->linker settings
+under link libraries enter the following libraries
+
+\WinSrc\scribbler.a
+\MinGW\info\lib\libwsock32.a
+\MinGW\info\lib\libmingw32.a
+\MinGW\info\lib\libmingwex.a
+
+which should be on your system. If they are not get help now.
+In Project->Build option->Search Directories
+under Compiler enter
+
+\WinSrc
+
+The following is about the simplest program possible with our interface and
+the Scribbler/Fluke.
+------------------------------------------------------------------------------------------
+
+#include "scribbler.h" 
+#include "system.h"
+#include <unistd.h>
+
+
+int	gDebugging = 0;
+
+
+WinSerial	port(ADDRESS);
+
+Scribbler       robot(port); 
+
+int main( int argc, char *argv[])
+{
+	robot.drive(50, 50);
+
+	sleep(1);
+
+	robot.stop();
+
+    	return 0;   
+}
+	
+-------------------------------------------------------------------------------------------
+
+
+Enter this into the main.cpp file using CodeBlocks editor.
+The Compile it Build->Build
+and correct any errors.
+Once it Compiles you can run it.
+Now before we run the program check that the robot is ready.
+Turn the robot on, if it is not already on.
+
+Back in Code::Blocks
+Build->Run
+A notification that a Bluetooth device is trying to connect 
+should pop up.
+Click on that Notification
+enter passkey of 1234
+Click Next and Click Finish
+
+
+The robot should move forward a bit.
+<End of Set up for Windows XP for Physical Robot>
+
+<Set up for Windows XP for Simulated Robot>
+In CodeBlocks open a new project.
+In Project->Build options->linker settings
+under link libraries enter the following libraries
+
+\WinSrc\scribbler.a
+\MinGW\info\lib\libwsock.a
+\MinGW\info\lib\libmingw32.a
+\MinGW\info\lib\libmingwex.a
+
+which should be on your system. If they are not get help now.
+In Project->Build option->Search Directories
+under Compiler enter
+
+\WinSrc
+
+The following is about the simplest program possible with our interface and
+the Scribbler/Fluke.
+------------------------------------------------------------------------------------------
+
+#include "scribbler.h" 
+#include "system.h"
+#include <unistd.h>
+
+
+int	gDebugging = 0;
+
+
+ClientSerial	port(ADDRESS);
+
+Scribbler       robot(port); 
+
+int main( int argc, char *argv[])
+{
+	robot.drive(50, 50);
+
+	sleep(1);
+
+	robot.stop();
+
+    	return 0;   
+}
+	
+-------------------------------------------------------------------------------------------
+
+
+Enter this into the main.cpp file using CodeBlocks editor.
+The Compile it Build->Build
+and correct any errors.
+Once it Compiles you can run it.
+Now before we run the program check that the robot is ready.
+Start the Robot world
+open a command prompt
+and enter the commands
+
+cd \WinSrc
+video
+ and Robot World should appear
+
+Back in Code::Blocks
+Build->Run
+Click on Robot World Icon to bring it to the foreground
+You have to be quick about this as the program takes about 1.3 secs
+to run. To give myself more time I will insert a line before
+
+	robot.drive(50, 50);
+
+That says
+
+	sleep(3);
+
+
+The robot should move forward a bit.
+<End of Set up for Windows XP for Simulated Robot>
+
+<Set up for Linux for Physical Robot>
+In etc/bluetooth
+enter into rfcomm.conf
+
+rfcomm0 {
+	# Automatically bind the device at startup
+	bind yes;
+
+	# Bluetooth address of the device
+	device AA:BB:CC:DD;
+	#BorgDongle
+
+	# RFCOMM channel for the connection
+	channel	1;
+
+	# Description of the connection
+	comment "IPRE Scribbler Dongle 245782";
+}
+
+where AA:BB:CC:DD is the address that you got by running
+
+hcitool scan
+
+with the BlueTooth dongle plugged in and the Scribbler/Fluke turned on
+
+<End of Set up for Linux for Physical Robot>
+<Set up for Linux for Simulated Robot>
+in a separate terminal
+
+cd src
+./video
+
+<End of Set up for Linux for Simulated Robot>
+
+
+
+ 
+

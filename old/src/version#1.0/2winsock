@@ -1,0 +1,4 @@
+cp system.h.winsock system.h
+cp WIN.SOCK OS.COMM
+make clean
+make

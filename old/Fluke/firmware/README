@@ -1,0 +1,31 @@
+IPRE Fluke Firmware 
+
+  Compile
+   - install ARM gcc -  http://www.gnuarm.com/
+   - type make
+
+
+  Download
+   - use the fluke version of lpc21isp and a null-modem cable
+     make dl (lpc21isp2 -control main.hex /dev/tty.usbserial 19200 20000)
+
+   - use the fluke bluetooth upgrade feature
+     make dl2 python update-firmware.py main.hex /dev/tty.scribbler5844 fast
+
+
+  Run 
+   - plug into the scribbler or use external power connector 
+
+       from myro import *
+       init()
+ 
+
+Resources
+
+  lpc21isp:
+
+    windows binary: http://myro.roboteducation.org/packages/lpc21isp-ipre-win.zip
+    source:         http://www.roboteducation.org/files/lpc21isp-ipre.c
+
+  http://wiki.roboteducation.org/IPRE_Fluke_Setup
+  http://wiki.roboteducation.org/DongleDetails

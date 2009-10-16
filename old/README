@@ -1,0 +1,33 @@
+
+If you are installing on a Windows system run 
+winsetup
+
+If you are installing on a Mac run
+./macsetup
+
+If you are installing on a Linux system run
+./linuxsetup
+
+After you have done the set up required for your systen
+
+
+cd src
+
+make
+
+once make succeeds you can then make the examples
+
+cd ../examples
+make
+
+I have been experimenting with SDL graphics for the Surveyor
+if you are set up for SDL 
+then
+
+make SDL 
+
+will construct a simple picture viewer and a test program
+
+
+
+

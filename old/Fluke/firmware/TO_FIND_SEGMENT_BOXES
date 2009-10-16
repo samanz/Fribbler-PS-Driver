@@ -1,0 +1,14 @@
+Best way is in matlab
+
+Take a picture with your object of interest, save to pic.jpg. Open
+pic.jpg in gimp or you favorite editor and cut/paste your object into
+a new image.  Save that as object.jpg. Then in matlab look at the YUV
+histogram of the image:
+
+rgb = imread('object.png')
+ycbcr = rgb2ycbcr(rgb)
+U: imhist(ycbcr(:,:,2)) 
+V: imhist(ycbcr(:,:,3))
+
+
+Note the 90-95% percentiles and use those as the U/V min/maxes.

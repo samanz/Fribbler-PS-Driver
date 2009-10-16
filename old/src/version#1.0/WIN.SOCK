@@ -1,0 +1,12 @@
+#specify the OS and comms method
+#SERIAL = SocSerial
+#SERIAL = WinSerial
+#SERIAL = PosixSerial
+SERIAL = WinsocSerial
+
+#FILE   = PosixFile
+FILE   = WinFile
+
+# hack for dos box in windows as sdl-config doesn't work
+LIBS  = -L/msys/1.0/local/lib /MinGW/lib/libwsock32.a
+INCS = -I/msys/1.0/local/include -I/msys/1.0/local/include/SDL

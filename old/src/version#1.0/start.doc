@@ -1,0 +1,160 @@
+Chapter 1:	Getting Started
+
+The folling is about the simplest program possible with our interface and
+the Scribbler/Fluke.
+------------------------------------------------------------------------------------------
+
+#include "scribbler.h" 
+#include "system.h"
+#include <unistd.h>
+
+
+int	gDebugging = 0;
+
+
+CLIENT_SERIAL	port(ADDRESS);
+
+Scribbler       robot(port); 
+
+int main( int argc, char *argv[])
+{
+	robot.drive(50, 50);
+
+	sleep(1);
+
+	robot.stop();
+
+    	return 0;   
+}
+	
+-------------------------------------------------------------------------------------------
+
+
+Enter this into a file called simple.cpp compile it in your compile environment
+and run it.
+The robot should move forward a bit.
+
+It Did! 
+	Great! your development environment is correctly set up you can now go on
+to chapter 2 which introduces some other functions.
+
+It Did Not!
+	OK we have to modify your development environment.
+The failure could have occurred in the compiling, linking or running phases.
+If if failed in the compilation phase
+	- check you are specifying the correct directory for the includes
+	- in Windows you might have to replace the sleep(1) by Sleep(1000)
+
+If it failed in the linking phase
+	- check you are specifying the correct directory for object and lib files
+	- check you are linking in the correct .o and .a files
+	  On Windows: scribbler.o robot.o data.o WinFile.o and linwsock32.a and
+			either WinsocSerial.o or WinSerial.o depending on method 
+			of communicating
+	  On *nix: scribbler.o robot.o data.o PosixFile.o and 
+			either PosixSoc.o or PosixPort.o depending on method 
+			of communicating
+
+If it failed in the running phase
+	- if you are using Bluetooth
+		- is the Bluetooth Dongle plugged in
+		- is the Scribbler on
+		- have you set up Bluetooth for connecting to this robot
+		- are you set up for Serial Port communication
+		- are you correctly setting the ADDRESS variable
+
+
+Keep on fixing above issues until Scribbler moves forward and then you
+can go to Chapter 2. But first make a note of the changes to your environment
+in case you need to do it again.
+
+Chapter 2:	Some useful functions
+
+	In the last chapter we saw the use of the drive function, here is its 
+prototype
+
+	int	drive(int left, int right, int duration = 0);
+
+the left and right parameters are the power to the left and right wheels, don't
+worry about the third parameter, it defaults to zero so you don't even have to
+specify it. Using different values for the left and right parameters you can
+get the robot to move forward, backup, spin, move in a circle or spiral etc
+and with using sleep functions can get the robot to draw geometric figures.
+
+       int     beep(int freq, int duration);
+
+will get the Scribbler to make a sound
+
+	robot.beep(512, 1000);
+
+makes a beep for about a second. (Note we specify the member function beep
+to be called on the object robot with parameters 512 and 1000).
+
+	The Fluke Dongle has a camera that you can use to take pictures and
+save on your computer. The prototype of one member function that does this is
+
+	Data	*takePhotoJPEG();
+
+notice that the member function returns a pointer to a object of type Data.
+There is a snippet of code that takes a picture and saves it to your disk
+in a file called test.jpeg
+
+	Data	*jpeg;
+	FileOut	*file;
+
+	jpeg = robot.takePhotoJPEG();
+	if (jpeg)
+	{
+		file = new FileOut("test.jpeg");
+		jpeg->write(*file, 0);
+		delete file;
+	}
+
+See if you can follow the code and say why each line is there and what it does.
+The Data class takes care of all the details of handling data and allows the
+user to not worry (or perhaps not even know) about these details. If you are the
+kind of person that likes to know "what's going on under the hood" you can
+examine the Data object definition in data.h and implementation in data.cpp.
+The FileOut class hides some OS dependent code, the source for it is available
+in your system.
+
+	The scribbler has a number of low level sensors which can tell you about
+the area immediately about the robots current location. Our interface keeps track
+of these sensors and the following is the prototype of the member function that
+refreshes our local copies of the sensors.
+
+        int     updateScribblerSensors();
+
+once you have updated our local copies of the scribbler sensors, you can access
+them with the following member functions
+
+	int	scribblerLeftIR();	
+	int	scribblerRightIR();	
+	int	scribblerLeftLight();	
+	int	scribblerCenterLight();	
+	int	scribblerRightLight();	
+	int	scribblerLineLeft();	
+	int	scribblerLineRight();	
+	int	scribblerStall();
+
+The IR functions return 0 or 1. 
+	0 indicates an obstacle in that direction
+	1 indicates that direction is clear
+The Light functions return a integer that specifies how much light that sensor detects.
+	0 id dark, and it gets bigger as it gets brighter 
+The LineLeft and LineRight functions return 0 or 1.
+	0 indicates the robot did not detect a line on the side specified
+	1 indicates the robot did detect a line on the side specified
+The Stall function returns 0 or 1.
+	0 indicates the robot's motors are acting as specified
+	1 indicates the robot has run in to something and the motors are not moving
+	  the Scribbler, i.e. the Scribbler has stalled.
+ 
+	This is a powerful subset of Scribbler member functions for learning C++,
+and basic robotics.
+	
+
+
+
+ 
+

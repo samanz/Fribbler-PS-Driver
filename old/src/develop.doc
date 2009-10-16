@@ -1,0 +1,16 @@
+	All development is done on Linux and then ported to Mac OS X
+and then to Windows XP. 
+	Mac OS X is almost the same as Linux, the only difference is 
+the port name for the bluetooth port. In both cases the environment 
+variable ROBOT_ADDRESS is used to find the correct port. 
+	On Linux or OS X we just run make to construct the library
+and the video simulation and some example programs.
+	Windows is a bit different from the Linux and OS X version.
+First, we use MinGW and MSYS to approximate a Linux environment.
+Second, we copy system.h.windows to system.h and ensure that the
+environment variable OS has the value Windows. Make will now construct 
+the library, simulation and example programs for Windows XP environment.
+	The libscribbler library should compile in almost any environment
+with a C++ compiler. video is dependent on SDL, SDL_image and SDL_gfx, 
+which must be available on the system for video to be compiled. SDL is
+implemented as DLL's on windows and these must be available for video

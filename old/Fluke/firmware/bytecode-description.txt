@@ -1,0 +1,159 @@
+Fluke/Scribbler Byte Codes
+keith.ohara@gatech.edu
+April 2008
+IPRE Fluke Firmware
+
+Scribbler byte codes are always 9 bytes long with the first byte being
+the command.  Also, the scribbler echoes back everything you send to
+it, so you should keep this in mind when writing code to speak the
+IPRE protocol. Also there is an additional echo mode that will echo
+the CMD character after the entire response has been sent.  This is
+off by default, but can be enabled via the SET_ECHO_MODE code.
+
+Fluke byte codes are variable length based on the command (1 byte)
+
+
+CMD NAME             
+Description
+ in:
+out:
+
+
+SOFT_RESET		
+Resets Scribbler
+in:  33 XX XX XX XX XX XX XX XX	
+out: n/a
+
+UPDATE_FIRMWARE	     
+Begins Fluke Firmare Upgrade expects 40 chunks of data and returns 42
+or 1 based on success or failure
+in:  40 01 23 ...
+out: ...
+
+SAVE_EEPROM	     
+Dump the current serial memory, page by page. Uses checksum and
+expects 42 on sucess, and 1 on failure.
+in:  41 ...
+out: ...
+
+RESTORE_EEPROM 
+Restore the current serial memory, page by page. Uses checksum and
+expects 42 on sucess, and 1 on failure.
+in:  42 ...
+out: ...
+
+WATCHDOG_RESET	     
+Reset the Fluke using the watchdog timer
+in:  43
+out: 
+
+GET_PASS1            
+Return the lower 8 bytes of the 16 byte pass code
+in:  50 XX XX XX XX XX XX XX XX 
+out: P7 P6 P5 P4 P3 P2 P1 P0
+
+GET_PASS2
+Return the upper 8 bytes of the 16 byte pass code
+in:  51 XX XX XX XX XX XX XX XX 
+out: PF PE PD PC PB PA P9 P8
+
+SET_PASS1
+Set the lower 8 bytes of the 16 byte pass code
+in:  55 P7 P6 P5 P4 P3 P2 P1 P0
+
+SET_PASS2
+Set the upper 8 bytes of the 16 byte pass code
+in:  56 PF PE PD PC PB PA P9 P8
+out: 
+
+GET_NAME2
+Return the upper 8 bytes of the 16 byte robot name
+in: 64 XX XX XX XX XX XX XX XX 
+out PF PE PD PC PB PA P9 P8
+
+GET_ALL
+Retreive all the scribbler sensors
+in:  65 XX XX XX XX XX XX XX XX 
+out: leftIR rightIR LeftLightHighyte LeftLightLowByte CenterLightHighByte 
+     CenterLightLowByte RightLightHighByte RightLightLowByte LineLeft LineRight 
+     Stall
+
+GET_ALL_BINARY       
+in:  
+out: 
+
+GET_LIGHT_LEFT       67  
+GET_LIGHT_CENTER     68  
+GET_LIGHT_RIGHT      69  
+GET_LIGHT_ALL        70  
+GET_IR_LEFT          71  
+GET_IR_RIGHT         72  
+GET_IR_ALL           73  
+GET_LINE_LEFT        74  
+GET_LINE_RIGHT       75  
+GET_LINE_ALL         76  
+GET_STATE            77  
+GET_NAME             78  
+GET_STALL            79  
+GET_INFO             80  
+GET_DATA             81  
+
+
+GET_RLE              82  
+GET_IMAGE            83  
+GET_WINDOW           84  
+GET_DONGLE_L_IR      85  
+GET_DONGLE_C_IR      86  
+GET_DONGLE_R_IR      87  
+GET_WINDOW_LIGHT     88  
+GET_BATTERY          89  
+GET_SERIAL_MEM       90  
+GET_SCRIB_PROGRAM    91  
+GET_CAM_PARAM        92  
+
+GET_IMAGE_COMPRESSED 93 
+GET_BLOB_WINDOW      94
+GET_BLOB             95
+
+
+SET_SINGLE_DATA      96  
+SET_DATA             97  
+SET_ECHO_MODE        98  
+SET_LED_LEFT_ON      99 
+SET_LED_LEFT_OFF     100
+SET_LED_CENTER_ON    101
+SET_LED_CENTER_OFF   102
+SET_LED_RIGHT_ON     103
+SET_LED_RIGHT_OFF    104
+SET_LED_ALL_ON       105
+SET_LED_ALL_OFF      106
+SET_LED_ALL          107 
+SET_MOTORS_OFF       108 
+SET_MOTORS           109 
+SET_NAME             110 
+SET_LOUD             111
+SET_QUIET            112
+SET_SPEAKER          113 
+SET_SPEAKER_2        114 
+
+
+SET_DONGLE_LED_ON    116
+SET_DONGLE_LED_OFF   117
+SET_RLE              118
+SET_NAME2            119 
+SET_DONGLE_IR        120
+SET_SERIAL_MEM       121
+SET_SCRIB_PROGRAM    122
+SET_START_PROGRAM    123
+SET_RESET_SCRIBBLER  124
+SET_SERIAL_ERASE     125
+SET_DIMMER_LED       126
+SET_WINDOW           127
+SET_FORWARDNESS      128
+SET_WHITE_BALANCE    129
+SET_NO_WHITE_BALANCE 130
+SET_CAM_PARAM        131
+
+SET_UART0            132
+SET_PASS_BYTE        133
+SET_PASSTHROUGH      134

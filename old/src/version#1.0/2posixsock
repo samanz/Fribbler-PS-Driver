@@ -1,0 +1,4 @@
+cp system.h.posixsoc system.h
+cp POSIX.SOCK OS.COMM
+make clean
+make

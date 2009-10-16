@@ -1,0 +1,28 @@
+The Scribbler project is in three sections.
+
+First, libscribbler.a is a library that together with the include file scribbler.h
+allow C++ programs to access the Scribbler/Fluke over the provided bluetooth link.
+This library is documented in the libman.odt document.
+
+Second, video is a visual simulation of a Scribbler/Fluke robot in a simple 
+environment. Versions of video exist for Linux, Mac OS X, and Windows XP.
+It is intended that the student take home one of these versions in order to
+gain experience in using C++ and the libscribbler interface in a relaxed environment.
+Use of video is documented in the visual.odt document, and start.doc provides an 
+introduction to libscribbler and video.
+
+Third, instructions are given to allow the college to set up a system so a student can
+remotely program a Scribbler/Fluke and watch the results over the internet. This will 
+allow the student limited access to a Scribbler/Fluke outside of the class room setting.
+The robot and webcam should be human monitored at those times that the students are 
+encouraged to use this link. This should be a good job for a student as most of the 
+time can be spent studing. 
+This is documented in cambot.doc.
+
+General development notes are in develop.doc.
+
+
+***** Remarks:
+
+Before you run it, you need to export the environment variable for this session as:
+ $ export ROBOT_ADDRESS=/dev/rfcomm0

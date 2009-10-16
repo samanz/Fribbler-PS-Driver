@@ -1,0 +1,115 @@
+include MyOS.XBee
+
+LIBS = \MinGW\lib\libwsock32.a
+INCS = -I/SDL_gfx/SDL_gfx-2.0.18 -I/SDL/SDL-1.2.13/include -I/SDL/SDL-1.2.13/include/SDL
+L = -L\SDL\SDL-1.2.13\lib -lmingw32 -lSDLmain -lSDL -mwindows
+
+
+
+all: scrib cali surv wander wanderf sensors sensorf video 
+
+#scrib: scrib.o data.o scribbler.o WinSerial.o WinFile.o
+#	g++ -ggdb -funsigned-char -o scrib.o scribbler.o data.o WinSerial.o 
+
+video: video.o data.o WinsocSerial.o gamengin.o
+#	g++ -ggdb -o video $(shell sdl-config --cflags --libs) video.o data.o gamengin.o SocSerial.o -L/usr/lib -lSDL lSDL_image -lSDL_ttf -lSDL_mixer
+#	g++ -ggdb -o video $(shell sdl-config --cflags --libs) gamengin.cpp video.cpp data.o WinsocSerial.o -lSDL_image -lSDL_ttf -lSDL_mixer -lSDL_gfx
+	g++ -ggdb -o video $(INCS) $(L) gamengin.o video.o data.o  WinsocSerial.o -lSDL $(LIBS)
+#g++ -ggdb -o video $(shell sdl-config --cflags --libs) gamengin.c++ video.c++ -lSDL_image -lSDL_ttf -lSDL_mixer
+#g++ -ggdb -o life  -I/usr/include/SDL -D_GNU_SOURCE -D_REENTRANT gamengin.c++ life.c++ -L/usr/lib -lSDL
+
+WinsocSerial: WinsocSerial.cpp WinsocSerial.h
+	g++ -ggdb -Wall -c WinsocSerial.cpp
+
+video.o: video.cpp
+	g++ -ggdb -Wall $(INCS) -c video.cpp 
+
+sensors: sensors.o data.o scribbler.o robot.o WinSerial.o WinFile.o
+	g++ -ggdb -o sensors sensors.o scribbler.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+sensorf: sensorf.o data.o scribbler.o robot.o WinSerial.o WinFile.o
+	g++ -ggdb -o sensorf sensorf.o scribbler.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+
+wander: wander.o data.o scribbler.o robot.o WinSerial.o WinFile.o
+	g++ -ggdb -funsigned-char -o wander wander.o scribbler.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+wanderf: wanderf.o data.o scribbler.o robot.o WinSerial.o WinFile.o
+	g++ -ggdb -funsigned-char -o wanderf wanderf.o scribbler.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+scrib: scrib.o data.o scribbler.o robot.o WinsocSerial.o WinFile.o
+	g++ -ggdb -funsigned-char -o scrib scrib.o scribbler.o robot.o data.o WinsocSerial.o WinFile.o $(LIBS)
+
+cali: cali.o data.o scribbler.o robot.o WinSerial.o WinFile.o
+	g++ -ggdb -funsigned-char -o cali cali.o scribbler.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+surv: surv.o surveyor.o robot.o WinSerial.o WinFile.o data.o
+	g++ -ggdb -funsigned-char -o surv surv.o surveyor.o robot.o data.o WinSerial.o WinFile.o $(LIBS)
+
+cali.o: cali.cpp data.h scribbler.h
+	g++ -ggdb -funsigned-char -c cali.cpp
+
+data.o: data.cpp data.h
+	g++ -ggdb -funsigned-char -c data.cpp
+
+scrib.o: scrib.cpp scribbler.h data.h
+	g++ -ggdb -Wall -funsigned-char  -c scrib.cpp
+
+wander.o: wander.cpp scribbler.h data.h
+	g++ -ggdb -Wall -funsigned-char  -c wander.cpp
+
+wanderf.o: wanderf.cpp scribbler.h data.h
+	g++ -ggdb -Wall -c wanderf.cpp
+
+sensors.o: sensors.cpp scribbler.h data.h
+	g++ -ggdb -Wall -c sensors.cpp
+
+sensorf.o: sensorf.cpp scribbler.h data.h
+	g++ -ggdb -Wall -c sensorf.cpp
+
+gamengin.o: gamengin.cpp gamengin.h
+	g++ -ggdb -Wall -I/SDL/SDL-1.2.13/include -I/SDL/SDL-1.2.13/include/SDL  -c gamengin.cpp 
+
+
+
+scribbler.o: scribbler.cpp scribbler.h data.h
+	g++ -ggdb -Wall -funsigned-char -c scribbler.cpp
+
+
+
+
+WinSerial.o: WinSerial.cpp WinSerial.h data.h
+	g++ -ggdb -Wall -funsigned-char -c WinSerial.cpp
+
+WinFile.o : WinFile.cpp WinFile.h data.h
+	g++ -ggdb -Wall -funsigned-char -c WinFile.cpp
+
+
+PosixSerial.o: PosixSerial.cpp PosixSerial.h data.h
+	g++ -ggdb -Wall -funsigned-char -c PosixSerial.cpp
+
+SocSerial.o: SocSerial.cpp SocSerial.h data.h
+	g++ -ggdb -Wall -c SocSerial.cpp
+
+Socket.o: Socket.cpp Socket.h
+	g++ -ggdb -Wall -c Socket.cpp
+
+SocServer: SocServer.cpp SocSerial.h data.h
+	g++ -ggdb -Wall -o SocServer SocServer.cpp
+
+
+
+PosixFile.o : PosixFile.cpp PosixFile.h data.h
+	g++ -ggdb -Wall -funsigned-char -c PosixFile.cpp
+
+
+
+
+
+
+clean:
+	rm *.o	rm test 
+
+
+
+

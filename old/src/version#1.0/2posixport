@@ -1,0 +1,4 @@
+cp system.h.posixport system.h
+cp POSIX.PORT OS.COMM
+make clean
+make

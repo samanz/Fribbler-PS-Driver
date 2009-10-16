@@ -1,0 +1,25 @@
+
+/****************************************************************/
+/* A system.h file						*/
+/*								*/
+/* system.h files specify the environment for the software	*/
+/* generaly the OS and the method of communication.		*/
+/*								*/
+/* This one is for :-						*/
+/* 	Posix complient OS 					*/
+/*	and communication serial port 				*/
+/****************************************************************/
+#include "PosixSerial.h"
+#include "PosixFile.h"
+#include <unistd.h>
+
+
+#define CLIENT_SERIAL	PosixSerial
+#define SERVER_SERIAL	PosixSerial
+
+// For Mac
+//#define ADDRESS         "/dev/tty.IPRE6-245782-DevB-1"
+
+// For Linux
+#define ADDRESS		"/dev/rfcomm0"
+

@@ -1,0 +1,67 @@
+Installing Player/Stage on Ubuntu
+
+1) Go to SOURCEFORGE.NET project The Player Project
+
+2) Download player and extract to a directory
+
+3) Download stage and extract to a directory
+
+4) Player/Stage has a number of projects it depends on
+I found it necessary to download GIMP Toolkit 2.0 and
+GNU libtool. Download these via Synaptic Package Manager.
+
+5) cd to the directory you downloaded player and
+cd into the directory that was downloaded
+mine is /home/john/player/player-2.1.2
+
+6) Now the Three Famous Commands! 
+
+./configure
+
+examine the output and see if that is what you want
+
+7)
+make
+
+
+Often you are missing some packages so the compiles have
+errors. Examine the errors to see what packages you need,
+download them via Synaptic Package Manager and
+go back to 5
+
+if everything compiles you are ok.
+
+8) sudo make install
+
+9) go to the directory you downloaded Stage 
+mine is /home/john/stage/stage-2.1.1
+
+10) Now the Three Famous Commands again.
+This time slightly different
+
+./configure --includedir=/usr/include/gtk-2.0
+
+check the output to see if it sounds good
+
+11) make
+
+check the output to see if you need more packages
+if it compiles cleanly you are good
+
+12) sudo make install
+
+
+13) test it by opening two terminals and running
+
+player /usr/local/share/stage/worlds/simple.cfg
+
+in one terminal. A screen should pop up with a robot
+in the simple world.
+
+in the other terminal cd to your player directory
+
+cd examples/libplayerc++
+./laserobstacleavoid
+
+and the robot should start wandering around and not
+bump in to anything!

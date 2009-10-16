@@ -1,0 +1,23 @@
+/****************************************************************/
+/* A system.h file						*/
+/*								*/
+/* system.h files specify the environment for the software	*/
+/* generaly the OS and the method of communication.		*/
+/*								*/
+/* This one is for :-						*/
+/* 	Windows XP	 					*/
+/*	and communication via Serial Port			*/
+/****************************************************************/
+
+#include "WinSerial.h"
+#include "WinFile.h"
+
+#define CLIENT_SERIAL	WinSerial
+#define SERVER_SERIAL	WinSerial
+
+// For Windows XP
+#define ADDRESS         "\\\\.\\COM13"
+// Note the odd way of specifing com ports greater than 9
+// the first four characters of string needs to be 
+// two backslash a period and another backslash 
+// we need to double up on backslashes for C/C++
