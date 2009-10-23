@@ -115,9 +115,11 @@ int	DataSource::getCharBlocking(unsigned char &ch)
 }
 int	DataSource::getUint16(unsigned int &i)
 {
+	return 0;
 }
 int	DataSource::getUint32(unsigned long &i)
 {
+	return 0;
 }
 void	Data::write(DataSink &s, int mode)
 {

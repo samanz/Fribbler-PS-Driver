@@ -99,6 +99,7 @@ void	Robot::flushInputBuffer()
 int	Robot::takeChar(unsigned char ch)
 {
 	mPort.takeChar(ch);
+	return 0;
 }
 void	Robot::flushOutputBuffer()
 {

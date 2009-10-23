@@ -27,7 +27,7 @@ void log(char const str[])
 	}
 	FILE	*fd = fopen("log1", "a");
 
-	fprintf(fd, str);
+	fprintf(fd, "%s", str);
 
 	fclose(fd);
 }
