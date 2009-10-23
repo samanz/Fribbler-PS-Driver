@@ -1,0 +1,15 @@
+20091023 - Mark:
+
+	1. I removed my serial class from the src tree and placed it into a
+	   separate folder labeled "Mark" in the top-level directory.
+
+	2. I added some of John's code into the src tree. I believe that this
+	   is the bare minimum that we need from John's code in order to start
+	   working on the Player driver.
+
+	3. I also wrote up a Makefile with a default "test" target that compiles John's
+	   library in addition to temp.cpp, which is basically just a testing driver that
+	   I'm using to test John's code.
+
+	4. I started this Changelog which is pretty cumbersome to edit, but it's better
+	   than nothing. If you have any better ideas then let me know.
