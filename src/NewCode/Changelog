@@ -1,7 +1,0 @@
-20091023 - Mark:
-
-	I believe that this is the bare minimum that we need from John's code in
-	order to start working on the Player driver.
-
-	I also wrote up a Makefile with a default "test" target that compiles the
-	library in addition to temp.cpp, which is basically just a testing driver.
