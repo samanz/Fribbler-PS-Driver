@@ -26,4 +26,4 @@ scribbler.o: scribbler.cpp scribbler.h const.h robot.h data.h
 	$(CC) $(CFLAGS) scribbler.cpp
 
 clean:
-	rm -rf *.o a.out
+	rm -rf *.o a.out log1

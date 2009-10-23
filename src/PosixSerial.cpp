@@ -24,6 +24,10 @@ PosixSerial::PosixSerial(char const devName[])
 	{
 		mDevName = new char[strlen(devName) + 1];
 		strcpy(mDevName, devName);
+		if (gDebugging) {
+			sprintf(logchunk, "ROBOT_ADDRESS set to %s\n", mDevName);
+			log(logchunk);
+		}
 	}
 	else
 	{
@@ -38,7 +42,8 @@ PosixSerial::PosixSerial(char const devName[])
 		mDevName = new char[strlen(ret) + 1];
 		strcpy(mDevName, ret);
 	}
-        mPortFd = 0;}
+	mPortFd = 0;
+}
 PosixSerial::~PosixSerial()
 {
         if (mPortFd != 0)
@@ -82,7 +87,9 @@ void    PosixSerial::setupLink()
     	}
 	/* o.k. now let's make it blocking */
 	fcntl(mPortFd, F_SETFL, fcntl(mPortFd, F_GETFL, 0) & ~O_NONBLOCK);
-
+	if (gDebugging) {
+		log("serial communication is up and running\n");
+	}
 	mSetup = 1;
 }
  

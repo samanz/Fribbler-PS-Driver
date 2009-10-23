@@ -98,7 +98,7 @@ int	DataSource::getCharBlocking(unsigned char &ch)
 	long	int	trys;
 	for (trys = 0;!getChar(ch);trys++)
 	{
-		if (trys == 1000000)
+		if (trys >= 10)
 		{
 			printf("Throwing DataError\n");
 			throw DataError(1);

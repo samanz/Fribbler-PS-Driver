@@ -11,5 +11,13 @@
 	   library in addition to temp.cpp, which is basically just a testing driver that
 	   I'm using to test John's code.
 
-	4. I started this Changelog which is pretty cumbersome to edit, but it's better
+	4. There's some quirky behavior in John's code. When you create a Scribbler object
+	   for the first time, i.e. after starting up the Scribbler, you get some data
+	   errors. It seems to work fine after that though. In the Scribbler constructor,
+	   after the call to setEchoMode(), Scribbler::getFinalAck() gets called where
+	   the data errors occur. At first it would block indefinitely until I lowered the
+	   max tries in getCharBlocking() from 1000000 to 10. I couldn't figure out how to
+	   fix it, but maybe you'll have better luck with it.
+
+	5. I started this Changelog which is pretty cumbersome to edit, but it's better
 	   than nothing. If you have any better ideas then let me know.

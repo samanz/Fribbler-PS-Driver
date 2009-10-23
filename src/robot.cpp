@@ -69,6 +69,8 @@ Blob	*BlobList::get(int id)
 
 Robot::Robot(Serial &port) : mPort(port)
 {
+	flushInputBuffer();
+	flushOutputBuffer();
 }
 Robot::~Robot()
 {
