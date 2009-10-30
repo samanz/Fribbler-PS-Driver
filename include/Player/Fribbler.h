@@ -1,6 +1,9 @@
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
 
+Driver* Fribbler_Init(ConfigFile *cf, int section);
+void Fribbler_Register(DriverTable *table);
+
 // Fluke + Scribbler = Fribbler!
 // -- A Player driver.
 class Fribbler : public ThreadedDriver
@@ -15,8 +18,8 @@ class Fribbler : public ThreadedDriver
 
 		// Thread life-cycle
 		virtual void Main();
-		virtual int Setup();
-		virtual int Shutdown();
+		virtual int  MainSetup();
+		virtual void MainQuit();
 
 		// Message handling
 		virtual int Subscribe(player_devaddr_t id);
