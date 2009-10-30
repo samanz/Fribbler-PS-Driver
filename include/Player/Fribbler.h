@@ -16,6 +16,10 @@ class Fribbler : public ThreadedDriver
 		Serial *_port;
 		Scribbler *_scribbler;
 
+		// Player interfaces.
+		bool _hasPosition;
+		player_devaddr_t _position_addr;
+
 	public:
 		Fribbler(ConfigFile *cf, int section);
 		virtual ~Fribbler();

@@ -1,8 +1,8 @@
 CC = g++
 AR = ar
 
-PLAYER_CFLAGS = -Wall -fpic -c -I./include `pkg-config --cflags playercore`
-PLAYER_LFLAGS = -Wall -o libFribbler_Driver.so -shared -nostartfiles -L./lib -lscribbler `pkg-config --libs playercore`
+PLAYER_CFLAGS = -Wall -fPIC -c -I./include `pkg-config --cflags playercore`
+PLAYER_LFLAGS = -Wall -o libFribbler.so -shared -nostartfiles -L./lib -lscribbler `pkg-config --libs playercore`
 PLAYER_HEADERS = include/Player
 PLAYER_SOURCES = src/Player
 PLAYER_OBJECTS = Fribbler.o

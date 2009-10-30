@@ -1,8 +1,9 @@
 #include "Player/Fribbler.h"
 #include "Scribbler/PosixSerial.h"
 #include "Scribbler/scribbler.h"
-#include <string>
-using namespace std;
+
+#include <stdio.h>
+#include <string.h>
 
 // factory creation function
 Driver* Fribbler_Init(ConfigFile *cf, int section)
@@ -13,24 +14,42 @@ Driver* Fribbler_Init(ConfigFile *cf, int section)
 // registration
 void Fribbler_Register(DriverTable *table)
 {
-	table->AddDriver("fribbler", Fribbler_Init);
+	table->AddDriver("Fribbler", Fribbler_Init);
 }
 
 Fribbler::Fribbler(ConfigFile *cf, int section)
 : ThreadedDriver(cf, section, true, PLAYER_MSGQUEUE_DEFAULT_MAXLEN),
   _portname(0), _port(0), _scribbler(0)
 {
+	// Zero out the interface structures.
+	// Position2D
+	_hasPosition = false;
+	memset(&_position_addr, 0, sizeof(player_devaddr_t));
+
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
+
+	// Extract the interface information from the configuration file.
+	_hasPosition = cf->ReadDeviceAddr(&_position_addr, section, "provides", PLAYER_POSITION2D_CODE, -1, 0) == 0;
 }
 
 Fribbler::~Fribbler()
 {
+	// Free any resources that we may have used.
+	if (_port) {
+		delete _port;
+		_port = 0;
+	}
+	if (_scribbler) {
+		delete _port;
+		_port = 0;
+	}
 }
 
 void Fribbler::Main()
 {
 	while (1) {
+		pthread_testcancel(); // For Player 3
 		ProcessMessages();
 	}
 }
@@ -55,6 +74,14 @@ int Fribbler::MainSetup()
 		return -1;
 	}
 
+	// Step 2: add the interfaces.
+
+	// Position2D
+	if (_hasPosition && AddInterface(_position_addr) == 0) {
+		PLAYER_ERROR("failed to add Position2D interface for Scribbler");
+		return -1;
+	}
+
 	// Looking good; cross your fingers!
 	StartThread();
 	return 0;
@@ -63,11 +90,6 @@ int Fribbler::MainSetup()
 void Fribbler::MainQuit()
 {
 	StopThread();
-
-	if (_port) {
-		delete _port;
-		_port = 0;
-	}
 }
 
 int Fribbler::Subscribe(player_devaddr_t id)

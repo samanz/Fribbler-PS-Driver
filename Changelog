@@ -1,14 +1,13 @@
 20091030 - Sam:
 
-   1. Created square.cpp in src that will drive the scribbler simple as a square.
-   
-   2. Fixed error in scribbler.cpp with problem of not knowing if echo is set before echo set command is sent
+	1. Created square.cpp in src that will drive the scribbler simple as a square.
 
-   3. Created todo list
-   
+	2. Fixed error in scribbler.cpp with problem of not knowing if echo is set before echo set command is sent
+
+	3. Created todo list
+
 20091030 - Mark:
-	1. I separated the Scribbler-specific components from the Player-specific components
-	   (even though there are no Player-specific components yet).
+	1. I separated the Scribbler-specific components from the Player-specific components.
 
 	2. I edited the Makefile to be more modular in order to take into account the new
 	   directory tree hierarchy.
@@ -17,7 +16,9 @@
 	   target, i.e. "make". To build the Scribbler stand-alone driver that John created
 	   as a linkable library file, use the libscribbler target, i.e. "make libscribbler".
 
-	N. More to come; this day is not over yet!
+	4. Added initialization code to the Player driver (for Scribbler).
+
+	5. Created a basic Player configuration file for our driver.
 
 20091023 - Mark:
 

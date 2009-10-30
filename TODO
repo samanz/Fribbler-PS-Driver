@@ -1,1 +1,3 @@
 Test out picture taking and saving on scribbler
+
+Figure out why the driver plugin errors out when using it with the basic configuration file (/Fribbler.cfg).
