@@ -1,3 +1,6 @@
+#ifndef FRIBBLER_H
+#define FRIBBLER_H
+
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
 
@@ -9,6 +12,7 @@ void Fribbler_Register(DriverTable *table);
 class Fribbler : public ThreadedDriver
 {
 	private:
+		const char *_portname;
 		Serial *_port;
 		Scribbler *_scribbler;
 
@@ -26,3 +30,5 @@ class Fribbler : public ThreadedDriver
 		virtual int Unsubscribe(player_devaddr_t id);
 		virtual int ProcessMessage(MessageQueue *queue, player_msghdr *msghdr, void *data);
 };
+
+#endif
