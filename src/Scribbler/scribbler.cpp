@@ -543,8 +543,27 @@ int	Scribbler::setEchoMode(int mode)
 		fprintf(stderr, "echoMode set %d\n", mEchoMode);
 	}
 
-        if (!loadScribblerSensors())
+  if (!loadScribblerSensors())
 		return 0;
+
+	flushInputBuffer(); // In order so that this works whether or not echo mode
+											// was already set or not.
+
+	// Do it again just to make sure setEchoMode was successfully sent.
+	memset(data, '*', 8);
+	data[0] = mode ? 1 : 0;
+ 
+ 	if (!sendScribblerCommand(SET_ECHO_MODE, data))
+ 		return 0;
+
+ 	mEchoMode = data[0];
+ 	if (gDebugging & thisModule)
+ 	{
+ 		fprintf(stderr, "echoMode set %d\n", mEchoMode);
+ 	}
+ 
+ 	if (!loadScribblerSensors())
+ 		return 0;
 
 	return getFinalAck(SET_ECHO_MODE);
 }

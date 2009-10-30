@@ -1,3 +1,11 @@
+20091030 - Sam:
+
+   1. Created square.cpp in src that will drive the scribbler simple as a square.
+   
+   2. Fixed error in scribbler.cpp with problem of not knowing if echo is set before echo set command is sent
+
+   3. Created todo list
+   
 20091030 - Mark:
 	1. I separated the Scribbler-specific components from the Player-specific components
 	   (even though there are no Player-specific components yet).

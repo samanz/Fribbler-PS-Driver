@@ -39,5 +39,8 @@ robot.o: $(SCRIBBLER_SOURCES)/robot.cpp $(SCRIBBLER_HEADERS)/robot.h $(SCRIBBLER
 scribbler.o: $(SCRIBBLER_SOURCES)/scribbler.cpp $(SCRIBBLER_HEADERS)/scribbler.h $(SCRIBBLER_HEADERS)/const.h $(SCRIBBLER_HEADERS)/robot.h $(SCRIBBLER_HEADERS)/data.h
 	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/scribbler.cpp
 
+test:
+	$(CC) src/square.cpp -I./include/Scribbler -L./lib -lscribbler
+
 clean:
 	rm -rf *.a *.so *.o a.out log1
