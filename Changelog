@@ -1,3 +1,12 @@
+20091030 - Mark:
+	1. I separated the Scribbler-specific components from the Player-specific components
+	   (even though there are no Player-specific components yet).
+
+	2. I edited the Makefile to be more modular in order to take into account the new
+	   directory tree hierarchy.
+
+	3. More to come; this day is not over yet!
+
 20091023 - Mark:
 
 	1. I removed my serial class from the src tree and placed it into a
