@@ -5,7 +5,11 @@
 	2. I edited the Makefile to be more modular in order to take into account the new
 	   directory tree hierarchy.
 
-	3. More to come; this day is not over yet!
+	3. It is now possible to build a pluggable Player driver by using the default make
+	   target, i.e. "make". To build the Scribbler stand-alone driver that John created
+	   as a linkable library file, use the libscribbler target, i.e. "make libscribbler".
+
+	N. More to come; this day is not over yet!
 
 20091023 - Mark:
 
