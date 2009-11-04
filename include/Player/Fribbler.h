@@ -1,6 +1,8 @@
 #ifndef FRIBBLER_H
 #define FRIBBLER_H
 
+#define FRIBBLER_DEBUG 1
+
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
 

@@ -1,3 +1,13 @@
+20091104 - Mark:
+	1. Interesting tidbit that wasted some of my time:
+	   You must provide (Add) at LEAST one interface in the driver's constructor
+	   for the driver to be loaded properly. If no interfaces are provided,
+	   the thread management methods, namely MainSetup() and subsequently Main(),
+	   will never get called. Don't make the same mistake I did!
+
+	2. Added a macro (FRIBBLER_DEBUG) in /include/Fribbler.h
+	   Defining it as 1 (nonzero) enables debugging messages (obviously).
+
 20091030 - Sam:
 
 	1. Created square.cpp in src that will drive the scribbler simple as a square.
