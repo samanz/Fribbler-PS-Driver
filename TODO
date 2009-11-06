@@ -4,5 +4,3 @@ Fribbler Player Driver
 	- Main()
 	- ProcessMessage()
 	- etc. (as the need arises)
-
-Create a program to test the Fribbler driver.

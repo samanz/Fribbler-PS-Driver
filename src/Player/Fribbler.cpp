@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <string.h>
 
+// John's global debug flag
+#ifdef FRIBBLER_DEBUG
+	int gDebugging = 1;
+#else
+	int gDebugging = 0;
+#endif
+
 // Driver Class Factory
 Driver* Fribbler_Init(ConfigFile *cf, int section)
 {

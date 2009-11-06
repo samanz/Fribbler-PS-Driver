@@ -1,3 +1,8 @@
+20091106 - Mark:
+	1. Created a preliminary driver testing program (/src/test-fribbler.cpp);
+	   It can be built with a "make test-fribbler", or simply "make all",
+	   which will make all targets.
+
 20091104 - Mark:
 	1. Interesting tidbit that wasted some of my time:
 	   You must provide (Add) at LEAST one interface in the driver's constructor

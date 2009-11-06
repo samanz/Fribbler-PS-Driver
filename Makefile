@@ -1,46 +1,84 @@
+### DEFINITIONS ###
+
+# Toolchain definitions
 CC = g++
 AR = ar
+CP = cp
 
-PLAYER_CFLAGS = -Wall -fPIC -c -I./include `pkg-config --cflags playercore`
-PLAYER_LFLAGS = -Wall -o libFribbler.so -shared -nostartfiles -L./lib -lscribbler `pkg-config --libs playercore`
-PLAYER_HEADERS = include/Player
-PLAYER_SOURCES = src/Player
+# Player driver (Fribbler) definitions
+PLAYER_OUTPUT  = libFribbler.so
 PLAYER_OBJECTS = Fribbler.o
+PLAYER_CFLAGS  = -Wall -fPIC -c -I./include `pkg-config --cflags playercore`
+PLAYER_LFLAGS  = -Wall -shared -nostartfiles `pkg-config --libs playercore`
+PLAYER_HEADERS_DIR = include/Player
+PLAYER_SOURCES_DIR = src/Player
+PLAYER_SOURCES = $(PLAYER_SOURCES_DIR)/Fribbler.cpp
+PLAYER_HEADERS = $(PLAYER_HEADERS_DIR)/Fribbler.h
 
-SCRIBBLER_CFLAGS = -Wall -c -I$(SCRIBBLER_HEADERS)
-SCRIBBLER_LFLAGS = -Wall
-SCRIBBLER_HEADERS = include/Scribbler
-SCRIBBLER_SOURCES = src/Scribbler
+# Stand-alone driver (Scribbler) definitions
+SCRIBBLER_OUTPUT  = libscribbler.a
 SCRIBBLER_OBJECTS = data.o PosixSerial.o camera.o robot.o scribbler.o
+SCRIBBLER_CFLAGS  = -Wall -fPIC -c -I$(SCRIBBLER_HEADERS_DIR)
+SCRIBBLER_LFLAGS  = -Wall
+SCRIBBLER_HEADERS_DIR = include/Scribbler
+SCRIBBLER_SOURCES_DIR = src/Scribbler
+SCRIBBLER_SOURCES = $(SCRIBBLER_SOURCES_DIR)/data.cpp         \
+                    $(SCRIBBLER_SOURCES_DIR)/PosixSerial.cpp  \
+                    $(SCRIBBLER_SOURCES_DIR)/camera.cpp       \
+                    $(SCRIBBLER_SOURCES_DIR)/robot.cpp        \
+                    $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp
+SCRIBBLER_HEADERS = $(SCRIBBLER_HEADERS_DIR)/const.h          \
+                    $(SCRIBBLER_HEADERS_DIR)/data.h           \
+                    $(SCRIBBLER_HEADERS_DIR)/PosixSerial.h    \
+                    $(SCRIBBLER_HEADERS_DIR)/camera.h         \
+                    $(SCRIBBLER_HEADERS_DIR)/robot.h          \
+                    $(SCRIBBLER_HEADERS_DIR)/scribbler.h
 
-# Player driver
-default: $(PLAYER_OBJECTS) ./lib/libscribbler.a
-	$(CC) $(PLAYER_LFLAGS) $(PLAYER_OBJECTS)
+### TARGETS ###
 
-Fribbler.o: $(PLAYER_SOURCES)/Fribbler.cpp $(PLAYER_HEADERS)/Fribbler.h $(SCRIBBLER_HEADERS)/scribbler.h
-	$(CC) $(PLAYER_CFLAGS) $(PLAYER_SOURCES)/Fribbler.cpp
+# EVERYTHING!
+all:
+	# Scribbler library
+	$(MAKE) libscribbler
+	# Player driver
+	$(MAKE) Fribbler
+	# Driver tester
+	$(MAKE) test-fribbler
 
-# Build the Scribbler library.
+# Player driver (Fribbler)
+Fribbler: $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS)
+	$(CC) $(PLAYER_LFLAGS) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) -o $(PLAYER_OUTPUT)
+
+Fribbler.o: $(PLAYER_SOURCES) $(PLAYER_HEADERS) $(SCRIBBLER_HEADERS)
+	$(CC) $(PLAYER_CFLAGS) $(PLAYER_SOURCES_DIR)/Fribbler.cpp
+
+# Player driver test engine
+test-fribbler: src/test-fribbler.cpp
+	$(CC) src/test-fribbler.cpp `pkg-config --cflags --libs playerc++` -o test-fribbler
+
+# Stand-alone Scribbler library.
 libscribbler: $(SCRIBBLER_OBJECTS)
-	$(AR) rs libscribbler.a $(SCRIBBLER_OBJECTS)
+	$(AR) rs $(SCRIBBLER_OUTPUT) $(SCRIBBLER_OBJECTS)
+	$(CP) ./$(SCRIBBLER_OUTPUT) ./lib
 
-data.o: $(SCRIBBLER_SOURCES)/data.cpp $(SCRIBBLER_HEADERS)/data.h
-	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/data.cpp
+data.o: $(SCRIBBLER_SOURCES_DIR)/data.cpp $(SCRIBBLER_HEADERS_DIR)/data.h
+	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/data.cpp
 
-PosixSerial.o: $(SCRIBBLER_SOURCES)/PosixSerial.cpp $(SCRIBBLER_HEADERS)/data.h
-	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/PosixSerial.cpp
+PosixSerial.o: $(SCRIBBLER_SOURCES_DIR)/PosixSerial.cpp $(SCRIBBLER_HEADERS_DIR)/data.h
+	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/PosixSerial.cpp
 
-camera.o: $(SCRIBBLER_SOURCES)/camera.cpp $(SCRIBBLER_HEADERS)/camera.h
-	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/camera.cpp
+camera.o: $(SCRIBBLER_SOURCES_DIR)/camera.cpp $(SCRIBBLER_HEADERS_DIR)/camera.h
+	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/camera.cpp
 
-robot.o: $(SCRIBBLER_SOURCES)/robot.cpp $(SCRIBBLER_HEADERS)/robot.h $(SCRIBBLER_HEADERS)/camera.h
-	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/robot.cpp
+robot.o: $(SCRIBBLER_SOURCES_DIR)/robot.cpp $(SCRIBBLER_HEADERS_DIR)/robot.h $(SCRIBBLER_HEADERS_DIR)/camera.h
+	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/robot.cpp
 
-scribbler.o: $(SCRIBBLER_SOURCES)/scribbler.cpp $(SCRIBBLER_HEADERS)/scribbler.h $(SCRIBBLER_HEADERS)/const.h $(SCRIBBLER_HEADERS)/robot.h $(SCRIBBLER_HEADERS)/data.h
-	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES)/scribbler.cpp
+scribbler.o: $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp $(SCRIBBLER_HEADERS_DIR)/scribbler.h $(SCRIBBLER_HEADERS_DIR)/const.h $(SCRIBBLER_HEADERS_DIR)/robot.h $(SCRIBBLER_HEADERS_DIR)/data.h
+	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp
 
+# Sam's test program
 test:
 	$(CC) src/square.cpp -I./include/Scribbler -L./lib -lscribbler
 
 clean:
-	rm -rf *.a *.so *.o a.out log1
+	rm -rf *.a *.so *.o a.out log1 test-fribbler
