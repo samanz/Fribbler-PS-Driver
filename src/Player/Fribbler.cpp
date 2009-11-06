@@ -203,8 +203,28 @@ int Fribbler::Unsubscribe(player_devaddr_t id)
 
 int Fribbler::ProcessMessage(MessageQueue *queue, player_msghdr *msghdr, void *data)
 {
-	// Unknown message.
-	return -1;
+	if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D velocity command.\n");
+		#endif
+		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_MOTOR_POWER, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D motor request.\n");
+		#endif
+		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_GET_GEOM, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D geometry request.\n");
+		#endif
+		return 0;
+	} else {
+		// Unknown message.
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received an unknown message.\n");
+		#endif
+		return -1;
+	}
 }
 
 /* NOTE: need the extern to avoid C++ name-mangling */
