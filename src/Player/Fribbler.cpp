@@ -201,7 +201,8 @@ int Fribbler::Unsubscribe(player_devaddr_t id)
 
 int Fribbler::ProcessMessage(MessageQueue *queue, player_msghdr *msghdr, void *data)
 {
-	return 0;
+	// Unknown message.
+	return -1;
 }
 
 /* NOTE: need the extern to avoid C++ name-mangling */
