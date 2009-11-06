@@ -2,6 +2,7 @@
 #define FRIBBLER_H
 
 #define FRIBBLER_DEBUG 1
+#define FRIBBLER_CYCLE 10000 // 1000000/100 == 0.01 seconds
 
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"

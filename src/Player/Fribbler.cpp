@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 // John's global debug flag
 #ifdef FRIBBLER_DEBUG
@@ -182,6 +183,7 @@ void Fribbler::Main()
 		// FIXME: Publish data here...
 
 		ProcessMessages();
+		usleep(FRIBBLER_CYCLE);
 	}
 
 	#ifdef FRIBBLER_DEBUG
