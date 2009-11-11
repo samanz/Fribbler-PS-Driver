@@ -1,3 +1,7 @@
+/**
+ * Fribbler (Fluke + Scribbler) driver plugin for the Player robot server.
+ * Developed by the MetroBotics project at CUNY.
+ */
 #ifndef FRIBBLER_H
 #define FRIBBLER_H
 
@@ -20,8 +24,9 @@ class Fribbler : public ThreadedDriver
 		Scribbler *_scribbler;
 
 		// Player interfaces.
-		bool _hasPosition;
-		player_devaddr_t _position_addr;
+		bool                     _hasPosition;
+		player_devaddr_t         _position_addr;
+		player_position2d_data_t _position_data;
 
 	public:
 		Fribbler(ConfigFile *cf, int section);
@@ -35,7 +40,7 @@ class Fribbler : public ThreadedDriver
 		// Message handling
 		virtual int Subscribe(player_devaddr_t id);
 		virtual int Unsubscribe(player_devaddr_t id);
-		virtual int ProcessMessage(MessageQueue *queue, player_msghdr *msghdr, void *data);
+		virtual int ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *data);
 };
 
 #endif

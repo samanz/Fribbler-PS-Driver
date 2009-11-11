@@ -1,3 +1,7 @@
+/**
+ * Fribbler (Fluke + Scribbler) driver plugin for the Player robot server.
+ * Developed by the MetroBotics project at CUNY.
+ */
 #include "Player/Fribbler.h"
 #include "Scribbler/PosixSerial.h"
 #include "Scribbler/scribbler.h"
@@ -45,6 +49,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	// Position2D
 	_hasPosition = false; // assume no
 	memset(&_position_addr, 0, sizeof(player_devaddr_t));
+	memset(&_position_data, 0, sizeof(player_position2d_data_t));
 
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
@@ -178,9 +183,20 @@ void Fribbler::Main()
 	while (1) {
 		pthread_testcancel(); // required
 
-		// FIXME: Collect data here...
+		// Update our robot: read sensors and collect relevant data.
+		if (_scribbler->updateScribblerSensors() == 0) {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Scribbler failed to update its sensors.\n");
+			#endif
+		}
 
-		// FIXME: Publish data here...
+		// Update the interfaces that we're providing.
+		// Position2D
+		// FIXME: do we update the geometry, velocity, etc. here or in the message processing method?
+
+		// Publish our updated interfaces.
+		// Position2D
+		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE);
@@ -201,23 +217,40 @@ int Fribbler::Unsubscribe(player_devaddr_t id)
 	return Driver::Unsubscribe(id);
 }
 
-int Fribbler::ProcessMessage(MessageQueue *queue, player_msghdr *msghdr, void *data)
+int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *data)
 {
 	if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D velocity command.\n");
 		#endif
-		return 0;
-	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_MOTOR_POWER, _position_addr)) {
+		// Extract the data that accompanied this command.
+		player_position2d_cmd_vel_t *cmd = (player_position2d_cmd_vel_t *)data;
+		// Since the Scribbler is nonholonomic, ignore the y value.
+		/* FIXME: the yaw needs to be translated into steering.
+		 *        for now, just move the robot in a single direction, which will be determined entirely by the x value.
+		 */
+		/* FIXME: the x value is in meters/second; we need to translate this meaningfully for the scribbler.
+		 *        somebody will have to do some measuring and calibration.
+		 */
 		#ifdef FRIBBLER_DEBUG
-			fprintf(stderr, "Received Position2D motor request.\n");
+			fprintf(stderr, "Setting Scribbler's velocity to %f m/s.\n", cmd->vel.px);
 		#endif
+		if (_scribbler->drive(cmd->vel.px, cmd->vel.px) == 0) {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Scribbler failed to drive.\n");
+			#endif
+		} else {
+			// Update our position data.
+			_position_data.vel.px = cmd->vel.px;
+			// FIXME: there's more...
+		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_GET_GEOM, _position_addr)) {
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D geometry request.\n");
 		#endif
-		return 0;
+		// FIXME: take a wild guess...
+		return -1;
 	} else {
 		// Unknown message.
 		#ifdef FRIBBLER_DEBUG

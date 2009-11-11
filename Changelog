@@ -1,3 +1,13 @@
+20091111 - Mark:
+	1. Fixed a bug in the driver that was not permitting it to handle messages
+	   properly. Fribbler::ProcessMessage() first parameter must be QueuePointer&
+	   and not MessagePointer* as I had written initially.
+
+	2. Got the Player server to successfully process a message, specifically
+	   PLAYER_POSITION2D_CMD_VEL, so we're able to get the Scribbler to drive
+	   from within Player. The significance of this is that we basically set the
+	   stage for handling all the other messages since we know that this works.
+
 20091106 - Mark:
 	1. Created a preliminary driver testing program (/src/test-fribbler.cpp);
 	   It can be built with a "make test-fribbler", or simply "make all",
