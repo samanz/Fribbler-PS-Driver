@@ -50,6 +50,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_hasPosition = false; // assume no
 	memset(&_position_addr, 0, sizeof(player_devaddr_t));
 	memset(&_position_data, 0, sizeof(player_position2d_data_t));
+	memset(&_position_geom, 0, sizeof(player_position2d_geom_t));
 
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
@@ -249,8 +250,13 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D geometry request.\n");
 		#endif
-		// FIXME: take a wild guess...
-		return -1;
+		// Fill in the Scribbler's physical dimensions.
+		memset(&_position_geom, 0, sizeof(player_position2d_geom_t));
+		_position_geom.size.sl = SCRIBBLER_LENGTH;
+		_position_geom.size.sw = SCRIBBLER_WIDTH;
+		/*_position_geom.size.sh = SCRIBBLER_HEIGHT; // Ignored by Position2D*/
+		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_GET_GEOM, (void *)&_position_geom, sizeof(_position_geom), 0);
+		return 0;
 	} else {
 		// Unknown message.
 		#ifdef FRIBBLER_DEBUG

@@ -11,10 +11,18 @@ int main(int argc, char **argv)
 
 	while (1) {
 		robot.Read(); // Read from proxies
+
+		// geometry command
+		pp.RequestGeom();
+		player_bbox3d_t rect = pp.GetSize();
+		cout << "length: " << rect.sl << "   width: " << rect.sw << endl;
+
+/*
+		// velocity command
 		pp.SetSpeed(100, 0);
 		pp.SetCarlike(0,0);
-		pp.GetSize();
 		cout << "speed: " << pp.GetXSpeed() << "   pos: " << pp.GetXPos() << endl;
+*/
 	}
 
 	return 0;
