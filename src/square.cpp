@@ -2,6 +2,7 @@
 #include "scribbler.h"
 
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -28,6 +29,13 @@ int main(int argc, char* argv[])
 	
 	cerr << "drive: " << scribbler.drive(100,100,200) << endl;
 	cerr << "turn: " << scribbler.drive(-100,100,18) << endl;
+	cerr << "Take picture: " << endl;
+	
+	ofstream picFile("test.jpg");
+	Data * pic = scribbler.takePhotoJPEG();
+	picFile.write(pic->getData(), pic->getDataSize() );
+	cout << "Size in bytes: " << pic->getDataSize() << endl;
+	picFile.close();
 	
 	cerr << "drive: " << scribbler.drive(100,100,200) << endl;
 	cerr << "turn: " << scribbler.drive(-100,100,18) << endl;

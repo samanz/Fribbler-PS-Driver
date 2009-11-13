@@ -93,10 +93,11 @@ class Data
 	inline	long	getSize()	{ return mSize; }
 
 	char	operator[](int index);
-
+	
+	char *	getData();
+	int		getDataSize();
 	void	write(DataSink &s, int mode = BIGENDIAN);
 	void	read(DataSource &s, int mode = BIGENDIAN);
-
 	void	talk(FILE*);
 };
 /************************************************************************/
