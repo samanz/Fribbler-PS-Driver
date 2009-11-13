@@ -79,6 +79,13 @@ char	Data::operator[](int index)
 	return mData[index];
 }
 
+char * Data::getData() {
+	return mData;
+}
+
+int Data::getDataSize() {
+	return mSize;
+}
 
 Data::~Data()
 {
