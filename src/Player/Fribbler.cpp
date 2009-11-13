@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 // John's global debug flag
 #ifdef FRIBBLER_DEBUG
@@ -38,7 +39,7 @@ void Fribbler_Register(DriverTable *table)
 // Driver-specific initialization: performed once upon startup of the server.
 Fribbler::Fribbler(ConfigFile *cf, int section)
 : ThreadedDriver(cf, section, true, PLAYER_MSGQUEUE_DEFAULT_MAXLEN),
-  _portname(0), _port(0), _scribbler(0)
+  _portname(0), _port(0), _scribbler(0), _framerate(0)
 {
 	#ifdef FRIBBLER_DEBUG
 		fprintf(stderr, "Creating a new Fribbler object.\n");
@@ -50,7 +51,6 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_hasPosition = false; // assume no
 	memset(&_position_addr, 0, sizeof(player_devaddr_t));
 	memset(&_position_data, 0, sizeof(player_position2d_data_t));
-	memset(&_position_geom, 0, sizeof(player_position2d_geom_t));
 
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
@@ -183,6 +183,7 @@ void Fribbler::Main()
 
 	while (1) {
 		pthread_testcancel(); // required
+		time_t t0 = time(0); // time the frame
 
 		// Update our robot: read sensors and collect relevant data.
 		if (_scribbler->updateScribblerSensors() == 0) {
@@ -193,7 +194,9 @@ void Fribbler::Main()
 
 		// Update the interfaces that we're providing.
 		// Position2D
-		// FIXME: do we update the geometry, velocity, etc. here or in the message processing method?
+		_position_data.pos.px += _framerate * _position_data.vel.px;
+		_position_data.pos.py += _framerate * _position_data.vel.py;
+		// FIXME: I'm not sure how to handle the yaw.
 
 		// Publish our updated interfaces.
 		// Position2D
@@ -201,6 +204,7 @@ void Fribbler::Main()
 
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE);
+		_framerate = difftime(time(0), t0); // time the frame
 	}
 
 	#ifdef FRIBBLER_DEBUG
@@ -220,7 +224,39 @@ int Fribbler::Unsubscribe(player_devaddr_t id)
 
 int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *data)
 {
-	if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
+	// FIXME: might be a good idea to wrap this stuff into functions to avoid clutter
+	if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_GET_GEOM, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D geometry request.\n");
+		#endif
+		// Fill in the Scribbler's physical dimensions.
+		player_position2d_geom_t position_geom;
+		memset(&position_geom, 0, sizeof(player_position2d_geom_t));
+		position_geom.size.sl = SCRIBBLER_LENGTH;
+		position_geom.size.sw = SCRIBBLER_WIDTH;
+		/*_position_geom.size.sh = SCRIBBLER_HEIGHT; // Ignored by Position2D*/
+		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_GET_GEOM, (void *)&position_geom, sizeof(player_position2d_geom_t), 0);
+		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_SET_ODOM, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D request to set odometry.\n");
+		#endif
+		// Fill in the current odometry.
+		player_position2d_set_odom_req_t position_odom;
+		memset(&position_odom, 0, sizeof(player_position2d_set_odom_req_t));
+		position_odom.pose = _position_data.pos;
+		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_SET_ODOM, (void *)&position_odom, sizeof(player_position2d_set_odom_req_t), 0);
+		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_RESET_ODOM, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D request to reset odometry.\n");
+		#endif
+		// Reset the odometry.
+		_position_data.pos.px = 0;
+		_position_data.pos.py = 0;
+		_position_data.pos.pa = 0;
+		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D velocity command.\n");
 		#endif
@@ -245,17 +281,6 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			_position_data.vel.px = cmd->vel.px;
 			// FIXME: there's more...
 		}
-		return 0;
-	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_GET_GEOM, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
-			fprintf(stderr, "Received Position2D geometry request.\n");
-		#endif
-		// Fill in the Scribbler's physical dimensions.
-		memset(&_position_geom, 0, sizeof(player_position2d_geom_t));
-		_position_geom.size.sl = SCRIBBLER_LENGTH;
-		_position_geom.size.sw = SCRIBBLER_WIDTH;
-		/*_position_geom.size.sh = SCRIBBLER_HEIGHT; // Ignored by Position2D*/
-		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_GET_GEOM, (void *)&_position_geom, sizeof(_position_geom), 0);
 		return 0;
 	} else {
 		// Unknown message.

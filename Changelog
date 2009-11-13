@@ -1,3 +1,8 @@
+20091113 - Mark:
+	1. Added message processing for Position2D geometry.
+
+	2. Started working on Position2D odometry.
+
 20091111 - Mark:
 	1. Fixed a bug in the driver that was not permitting it to handle messages
 	   properly. Fribbler::ProcessMessage() first parameter must be QueuePointer&

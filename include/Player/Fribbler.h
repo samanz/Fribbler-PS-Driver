@@ -23,13 +23,14 @@ class Fribbler : public ThreadedDriver
 		Serial *_port;
 		Scribbler *_scribbler;
 
+		double _framerate; // duration of each frame (in seconds)
+
 		// Player interfaces.
 
 		// Position2D
 		bool                     _hasPosition;
 		player_devaddr_t         _position_addr;
 		player_position2d_data_t _position_data;
-		player_position2d_geom_t _position_geom;
 
 	public:
 		Fribbler(ConfigFile *cf, int section);
