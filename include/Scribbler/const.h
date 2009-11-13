@@ -3,6 +3,10 @@
 const int NONE = -1;
 
 
+// Scribbler Dimensions (in meters)
+const double SCRIBBLER_LENGTH = 0.1905;
+const double SCRIBBLER_WIDTH  = 0.1621;
+const double SCRIBBLER_HEIGHT = 0.1215; // best estimate w/ fluke attached
 
 
 // scribbler constants
