@@ -44,6 +44,8 @@ all:
 	$(MAKE) Fribbler
 	# Driver tester
 	$(MAKE) test-fribbler
+	# Square driving
+	$(MAKE) square
 
 # Player driver (Fribbler)
 Fribbler: $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS)
@@ -80,5 +82,9 @@ scribbler.o: $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp $(SCRIBBLER_HEADERS_DIR)/scr
 test:
 	$(CC) src/square.cpp -I./include/Scribbler -L./lib -lscribbler
 
+# Square program
+square: src/square-fribbler.cpp
+	$(CC) src/square-fribbler.cpp `pkg-config --cflags --libs playerc++` -o square-fribbler
+
 clean:
-	rm -rf *.a *.so *.o a.out log1 test-fribbler
+	rm -rf *.a *.so *.o a.out log1 test-fribbler square-fribbler

@@ -203,7 +203,7 @@ void Fribbler::Main()
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
-		usleep(FRIBBLER_CYCLE);
+		//usleep(FRIBBLER_CYCLE);
 		_framerate = difftime(time(0), t0); // time the frame
 	}
 
@@ -286,13 +286,35 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		player_position2d_cmd_vel_t *cmd = (player_position2d_cmd_vel_t *)data;
 		// Since the Scribbler is nonholonomic, ignore the y value.
 		/* FIXME: the yaw needs to be translated into steering.
-		 *        for now, just move the robot in a single direction, which will be determined entirely by the x value.
+		 *        for now, the angle's magnitude is irrelevant
+		 *        a positive angle will be translated into a counter-clockwise turn, and
+		 *        a negative angle will be translated into a clockwise turn
 		 */
 		/* FIXME: the x value is in meters/second; we need to translate this meaningfully for the scribbler.
 		 *        somebody will have to do some measuring and calibration.
 		 */
 		int leftMotor = 0, rightMotor = 0; // set the motors before calling Scribbler::drive()
-		if (cmd->vel.px > 9) { // forward calibration
+		// FIXME:  keeping turning and driving mutually exclusive for now to keep things simple
+		// FIXME: get rid of the magic numbers!
+		// turning has precedence
+		if (cmd->vel.pa > 0.01) {
+				#ifdef FRIBBLER_DEBUG
+					fprintf(stderr, "Turning counter-clockwise.\n");
+				#endif
+				// counter-clockwise turn: right-wheel dominant
+				rightMotor = cmd->vel.px;
+				leftMotor = -rightMotor;
+		} else if (cmd->vel.pa < -0.01) {
+				#ifdef FRIBBLER_DEBUG
+					fprintf(stderr, "Turning clockwise.\n");
+				#endif
+				// clockwise turn: left-wheel dominant
+				leftMotor = cmd->vel.px;
+				rightMotor = -leftMotor;
+		} else if (cmd->vel.px > 9) { // forward calibration
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Driving forward.\n");
+			#endif
 			// FIXME: this is specific to Scribbler #15
 			leftMotor = cmd->vel.px;
 			if (leftMotor - 14 < 10) {
@@ -304,7 +326,15 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 				rightMotor = leftMotor - 14;
 			}
 		} else if (cmd->vel.px < -9) { // reverse calibration
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Driving backward.\n");
+			#endif
+			// FIXME: yea...
 		} else { // stop!
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Stopping.\n");
+			#endif
+			rightMotor = leftMotor = 0;
 		}
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Setting Scribbler's velocity to %f m/s.\n", cmd->vel.px);

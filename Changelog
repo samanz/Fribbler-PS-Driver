@@ -5,6 +5,11 @@
 	2. Calibrated Scribbler #15
 	        a. Going forward in a straight line:
 	              avg function: right(left) = left - 14
+
+	3. Added preliminary turning. As of now, turning and driving are mutually exclusive.
+
+	4. Wrote square driving client in player, but having issues with latency; see TODO.
+
 20091113 - Mark:
 	1. Added message processing for Position2D geometry.
 
