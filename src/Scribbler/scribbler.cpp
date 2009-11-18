@@ -131,8 +131,8 @@ int     Scribbler::drive(int left, int right, int duration)
 {	char	data[8];
 
 	memset(data, '*', 8);
-        data[0] = left  + 100;
-	data[1] = right + 100;
+    data[0] = right  + 100;
+	data[1] = left + 100;
 
         if (!sendScribblerCommand(SET_MOTORS, data))
 		return 0;

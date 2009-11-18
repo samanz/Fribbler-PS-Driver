@@ -294,7 +294,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Setting Scribbler's velocity to %f m/s.\n", cmd->vel.px);
 		#endif
-		if (_scribbler->drive(cmd->vel.px, cmd->vel.px) == 0) {
+		if (_scribbler->drive(cmd->vel.px, cmd->vel.px-18) == 0) {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Scribbler failed to drive.\n");
 			#endif

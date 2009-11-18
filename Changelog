@@ -1,3 +1,10 @@
+20091118 - Mark:
+	1. Fixed a bug in John's code:
+	        Scribbler::drive() -left and right were reversed.
+
+	2. Calibrated Scribbler #15
+	        a. Going forward in a straight line:
+	              avg function: right(left) = left - 14
 20091113 - Mark:
 	1. Added message processing for Position2D geometry.
 

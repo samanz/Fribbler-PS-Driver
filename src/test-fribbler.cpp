@@ -8,14 +8,16 @@ int main(int argc, char **argv)
 {
 	PlayerClient    robot;
 	Position2dProxy pp(&robot, 0);
-	pp.ResetOdometry();
-	pp.RequestGeom();
+	//pp.ResetOdometry();
+	//pp.RequestGeom();
+	pp.SetSpeed(40, 0);
 
 	while (1) {
 		robot.Read(); // Read from proxies
 
 		// Test to see which methods generate which messages:
 
+/*
 		// geometry command
 		pp.RequestGeom();
 		player_bbox3d_t rect = pp.GetSize();
@@ -24,6 +26,7 @@ int main(int argc, char **argv)
 		// velocity command
 		pp.SetSpeed(100, 0);
 		cout << "speed: " << pp.GetXSpeed() << "   pos: " << pp.GetXPos() << endl;
+*/
 	}
 
 	return 0;
