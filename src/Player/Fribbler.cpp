@@ -291,10 +291,25 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		/* FIXME: the x value is in meters/second; we need to translate this meaningfully for the scribbler.
 		 *        somebody will have to do some measuring and calibration.
 		 */
+		int leftMotor = 0, rightMotor = 0; // set the motors before calling Scribbler::drive()
+		if (cmd->vel.px > 9) { // forward calibration
+			// FIXME: this is specific to Scribbler #15
+			leftMotor = cmd->vel.px;
+			if (leftMotor - 14 < 10) {
+				// too slow to make any reasonable difference;
+				// keep the motors at the same rate
+				rightMotor = leftMotor;
+			} else {
+				// otherwise compensate for error
+				rightMotor = leftMotor - 14;
+			}
+		} else if (cmd->vel.px < -9) { // reverse calibration
+		} else { // stop!
+		}
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Setting Scribbler's velocity to %f m/s.\n", cmd->vel.px);
 		#endif
-		if (_scribbler->drive(cmd->vel.px, cmd->vel.px-18) == 0) {
+		if (_scribbler->drive(leftMotor, rightMotor) == 0) {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Scribbler failed to drive.\n");
 			#endif
