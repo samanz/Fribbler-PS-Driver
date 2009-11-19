@@ -17,13 +17,16 @@ int main(int argc, char **argv)
 	// timing
 	time_t t0;
 	double framerate = 0.00;
-	double tStraight = 3.50;
-	double tTurning  = 0.10;
 	double tElapsed  = 0.00;
+
+	// odometry
+	double distance  = 1.0; // meter
+	double theta     = 3.14159256/2.0; // pi/2 radians
+	double epsilon   = 0.0;
 
 	// initial state
 	state = STRAIGHT;
-	pp.SetSpeed(100, 0);
+	pp.SetSpeed(1, 0);
 
 	while (stateChanges < 4) {
 		t0 = time(0); // start of frame
@@ -31,21 +34,27 @@ int main(int argc, char **argv)
 
 		switch (state) {
 			case STRAIGHT: {
-				if (tElapsed >= tStraight) {
+				if (epsilon >= distance) {
 					// Change state to turning.
 					state = TURNING;
 					stateChanges++;
-					pp.SetSpeed(100, 1); // counter-clockwise
-					tElapsed = 0.0;
+					pp.SetSpeed(0, 1); // counter-clockwise
+					pp.ResetOdometry();
+					epsilon = 0.0;
+				} else {
+					epsilon += pp.GetXPos();
 				}
 			} break;
 			case TURNING: {
-				if (tElapsed >= tTurning) {
+				if (epsilon >= theta) {
 					// Change state to straight.
 					state = STRAIGHT;
 					stateChanges++;
-					pp.SetSpeed(100, 0); // straight
-					tElapsed = 0.0;
+					pp.SetSpeed(1, 0); // straight
+					pp.ResetOdometry();
+					epsilon = 0.0;
+				} else {
+					epsilon += pp.GetYaw();
 				}
 			} break;
 			default: break;

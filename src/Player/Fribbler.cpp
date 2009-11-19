@@ -196,7 +196,7 @@ void Fribbler::Main()
 		// Position2D
 		_position_data.pos.px += _framerate * _position_data.vel.px;
 		_position_data.pos.py += _framerate * _position_data.vel.py;
-		// FIXME: I'm not sure how to handle the yaw, yet.
+		_position_data.pos.pa += _framerate * _position_data.vel.pa;
 
 		// Publish our updated interfaces.
 		// Position2D
@@ -285,47 +285,43 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		// Extract the data that accompanied this command.
 		player_position2d_cmd_vel_t *cmd = (player_position2d_cmd_vel_t *)data;
 		// Since the Scribbler is nonholonomic, ignore the y value.
-		/* FIXME: the yaw needs to be translated into steering.
-		 *        for now, the angle's magnitude is irrelevant
-		 *        a positive angle will be translated into a counter-clockwise turn, and
-		 *        a negative angle will be translated into a clockwise turn
-		 */
-		/* FIXME: the x value is in meters/second; we need to translate this meaningfully for the scribbler.
-		 *        somebody will have to do some measuring and calibration.
-		 */
-		int leftMotor = 0, rightMotor = 0; // set the motors before calling Scribbler::drive()
+		int leftMotor = 0, rightMotor = 0; // set the motors appropriately before calling Scribbler::drive()
 		// FIXME:  keeping turning and driving mutually exclusive for now to keep things simple
 		// FIXME: get rid of the magic numbers!
 		// turning has precedence
-		if (cmd->vel.pa > 0.01) {
-				#ifdef FRIBBLER_DEBUG
-					fprintf(stderr, "Turning counter-clockwise.\n");
-				#endif
-				// counter-clockwise turn: right-wheel dominant
-				rightMotor = cmd->vel.px;
-				leftMotor = -rightMotor;
-		} else if (cmd->vel.pa < -0.01) {
-				#ifdef FRIBBLER_DEBUG
-					fprintf(stderr, "Turning clockwise.\n");
-				#endif
-				// clockwise turn: left-wheel dominant
-				leftMotor = cmd->vel.px;
-				rightMotor = -leftMotor;
-		} else if (cmd->vel.px > 9) { // forward calibration
+		if (cmd->vel.pa > 0) {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Turning counter-clockwise.\n");
+			#endif
+			// FIXME: this is specific to Scribbler #15
+			// FIXME: turn at max speed for now
+			cmd->vel.pa = 2.0; // 2.0 radians/second
+			// counter-clockwise turn: right-wheel dominant
+			rightMotor =  100;
+			leftMotor  = -100;
+		} else if (cmd->vel.pa < 0) {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Turning clockwise.\n");
+			#endif
+			// FIXME: yea...
+		} else if (cmd->vel.px > 0) { // forward calibration
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Driving forward.\n");
 			#endif
 			// FIXME: this is specific to Scribbler #15
-			leftMotor = cmd->vel.px;
-			if (leftMotor - 14 < 10) {
+			// FIXME: drive at max speed for now
+			cmd->vel.px = 0.3; // 0.3 meters/second
+			leftMotor = 100;
+			int error_correction = -16;
+			if (leftMotor + error_correction < 10) {
 				// too slow to make any reasonable difference;
 				// keep the motors at the same rate
 				rightMotor = leftMotor;
 			} else {
 				// otherwise compensate for error
-				rightMotor = leftMotor - 14;
+				rightMotor = leftMotor + error_correction;
 			}
-		} else if (cmd->vel.px < -9) { // reverse calibration
+		} else if (cmd->vel.px < 0) { // reverse calibration
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Driving backward.\n");
 			#endif
@@ -334,11 +330,12 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Stopping.\n");
 			#endif
+			cmd->vel.px = 0;
+			cmd->vel.pa = 0;
 			rightMotor = leftMotor = 0;
 		}
-		#ifdef FRIBBLER_DEBUG
-			fprintf(stderr, "Setting Scribbler's velocity to %f m/s.\n", cmd->vel.px);
-		#endif
+		// leftMotor and rightMotor should be set appropriately;
+		// go Scribbler, go!
 		if (_scribbler->drive(leftMotor, rightMotor) == 0) {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Scribbler failed to drive.\n");
@@ -346,7 +343,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		} else {
 			// Update our position data.
 			_position_data.vel.px = cmd->vel.px;
-			// FIXME: there's more... I think.
+			_position_data.vel.pa = cmd->vel.pa;
 		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_CAR, _position_addr)) {
