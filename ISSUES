@@ -1,0 +1,9 @@
+	- Bluetooth LATENCY! (I think)
+		- Does player provide a feedback mechanism to alert the client when the commands have been sent and acknowledged?
+			For example: You want to drive for 5 seconds, so you start a clock and send the drive command. However,
+			if it takes 2 seconds for the command to reach the scribbler and then act on the command, that means that
+			it will only drive for 3 seconds before it's sent the command to stop (which, again, might take time to reach it).
+			WE NEED A WAY TO WORK AROUND THIS SOMEHOW! As it works now, I can't get it to do anything (driving in a square,
+			for example) with any kind of certainty. What can we do about this?
+		- After thinking about this some, and checking exactly what kind of feedback we get from position2d, the only solution
+			is to have odometry implemented correctly.

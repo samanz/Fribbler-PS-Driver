@@ -203,7 +203,7 @@ void Fribbler::Main()
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
-		//usleep(FRIBBLER_CYCLE);
+		usleep(FRIBBLER_CYCLE);
 		_framerate = difftime(time(0), t0); // time the frame
 	}
 
@@ -346,7 +346,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		} else {
 			// Update our position data.
 			_position_data.vel.px = cmd->vel.px;
-			// FIXME: there's more...
+			// FIXME: there's more... I think.
 		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_CAR, _position_addr)) {
