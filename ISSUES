@@ -7,5 +7,3 @@
 			for example) with any kind of certainty. What can we do about this?
 		- After thinking about this some, and checking exactly what kind of feedback we get from position2d, the only solution
 			is to have odometry implemented correctly.
-
-	- Testing git branch
