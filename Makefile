@@ -61,7 +61,7 @@ test-fribbler: src/test-fribbler.cpp
 # Stand-alone Scribbler library.
 libscribbler: $(SCRIBBLER_OBJECTS)
 	$(AR) rs $(SCRIBBLER_OUTPUT) $(SCRIBBLER_OBJECTS)
-	$(CP) ./$(SCRIBBLER_OUTPUT) ./lib
+	$(CP) ./$(SCRIBBLER_OUTPUT) ./lib/$(SCRIBBLER_OUTPUT)
 
 data.o: $(SCRIBBLER_SOURCES_DIR)/data.cpp $(SCRIBBLER_HEADERS_DIR)/data.h
 	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/data.cpp
