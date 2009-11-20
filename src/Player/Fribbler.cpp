@@ -214,10 +214,7 @@ void Fribbler::Main()
 		}
 		_framerate = (_t1.tv_sec + (_t1.tv_usec / 1000000.0)) -
 		             (_t0.tv_sec + (_t0.tv_usec / 1000000.0));
-		if (_framerate < 0) _framerate = 0; // why is this even necessary?
-		#ifdef FRIBBLER_DEBUG
-			fprintf(stderr, "frame: %f s\n", _framerate);
-		#endif
+		fprintf(stderr, "frame: %f s\n", _framerate);
 	}
 
 	#ifdef FRIBBLER_DEBUG

@@ -1,6 +1,9 @@
 20091120 - Mark:
 	1. Added high resolution timing to the player driver.
 
+	2. Made a small optimization the the square client: main loop latency (player server)
+	   is still about 0.25 seconds/frame, which is still not all that great.
+
 20091118 - Mark:
 	1. Fixed a bug in John's code:
 	        Scribbler::drive() -left and right were reversed.

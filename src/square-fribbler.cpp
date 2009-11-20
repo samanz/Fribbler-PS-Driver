@@ -14,6 +14,7 @@ int main(int argc, char **argv)
 	// ghetto state machine
 	enum { STRAIGHT, TURNING } state;
 	int stateChanges = 0;
+	bool fInMotion = false;
 
 	// odometry
 	double distance  = 1.0; // in meters
@@ -23,6 +24,7 @@ int main(int argc, char **argv)
 	state = STRAIGHT;
 	pp.ResetOdometry();
 	pp.SetSpeed(1, 0);
+	fInMotion = true;
 	// initial state: TURNING
 /*
 	state = TURNING;
@@ -40,22 +42,26 @@ int main(int argc, char **argv)
 				if (pp.GetXPos() >= distance) {
 					// change state to turning.
 					pp.SetSpeed(0,0); // stop
+					fInMotion = false;
 					state = TURNING;
 					stateChanges++;
 					pp.ResetOdometry();
-				} else {
+				} else if (!fInMotion) {
 					pp.SetSpeed(1, 0); // straight
+					fInMotion = true;
 				}
 			} break;
 			case TURNING: {
 				if (pp.GetYaw() >= theta) {
 					// Change state to straight.
 					pp.SetSpeed(0,0); // stop
+					fInMotion = false;
 					state = STRAIGHT;
 					stateChanges++;
 					pp.ResetOdometry();
-				} else {
+				} else if (!fInMotion) {
 					pp.SetSpeed(0, 1); // counter-clockwise
+					fInMotion = true;
 				}
 			} break;
 			default: break;
