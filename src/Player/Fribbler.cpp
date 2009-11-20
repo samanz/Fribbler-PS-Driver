@@ -295,7 +295,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			#endif
 			// FIXME: this is specific to Scribbler #15
 			// FIXME: turn at max speed for now
-			cmd->vel.pa = 2.0; // 2.0 radians/second
+			cmd->vel.pa = 3.85 ; // 3.85 radians/second
 			// counter-clockwise turn: right-wheel dominant
 			rightMotor =  100;
 			leftMotor  = -100;

@@ -28,32 +28,36 @@ int main(int argc, char **argv)
 	state = STRAIGHT;
 	pp.SetSpeed(1, 0);
 
-	while (stateChanges < 4) {
+	while (stateChanges < 1) {
 		t0 = time(0); // start of frame
 		robot.Read(); // Read from proxies
+
+		cout << (state == STRAIGHT ? "straight" : "turning") << "::epsilon = " << epsilon << endl;
 
 		switch (state) {
 			case STRAIGHT: {
 				if (epsilon >= distance) {
 					// Change state to turning.
+					pp.SetSpeed(0,0); // stop
 					state = TURNING;
 					stateChanges++;
-					pp.SetSpeed(0, 1); // counter-clockwise
 					pp.ResetOdometry();
 					epsilon = 0.0;
 				} else {
+					pp.SetSpeed(1, 0); // straight
 					epsilon += pp.GetXPos();
 				}
 			} break;
 			case TURNING: {
 				if (epsilon >= theta) {
 					// Change state to straight.
+					pp.SetSpeed(0,0); // stop
 					state = STRAIGHT;
 					stateChanges++;
-					pp.SetSpeed(1, 0); // straight
 					pp.ResetOdometry();
 					epsilon = 0.0;
 				} else {
+					pp.SetSpeed(0, 1); // counter-clockwise
 					epsilon += pp.GetYaw();
 				}
 			} break;
