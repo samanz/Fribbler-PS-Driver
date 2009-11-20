@@ -27,8 +27,10 @@ int main(int argc, char* argv[])
 		cout << "Name:" << buffer << endl;
 	}
 	
-	cerr << "drive: " << scribbler.drive(100,100,200) << endl;
-	cerr << "turn: " << scribbler.drive(-100,100,18) << endl;
+	cerr << "drive: " << scribbler.drive(100,99,300) << endl;
+	usleep(5000);	
+	cerr << "turn: " << scribbler.drive(-65,65,47) << endl;
+	usleep(5000);
 	cerr << "Take picture: " << endl;
 	
 	ofstream picFile("test.jpg");
@@ -37,13 +39,17 @@ int main(int argc, char* argv[])
 	cout << "Size in bytes: " << pic->getDataSize() << endl;
 	picFile.close();
 	
-	cerr << "drive: " << scribbler.drive(100,100,200) << endl;
-	cerr << "turn: " << scribbler.drive(-100,100,18) << endl;
+	cerr << "drive: " << scribbler.drive(100,99,300) << endl;
+	usleep(5000);	
+	cerr << "turn: " << scribbler.drive(-65,65,47) << endl;
+	usleep(5000);	
 	
-	cerr << "drive: " << scribbler.drive(100,100,200) << endl;
-	cerr << "turn: " << scribbler.drive(-100,100,18) << endl;
+	cerr << "drive: " << scribbler.drive(100,99,300) << endl;
+	usleep(5000);	
+	cerr << "turn: " << scribbler.drive(-65,65,47) << endl;
+	usleep(5000);	
 	
-	cerr << "drive: " << scribbler.drive(100,100,200) << endl;	
+	cerr << "drive: " << scribbler.drive(100,99,300) << endl;	
 	
 
 	return 0;
