@@ -20,13 +20,15 @@ class Fribbler : public ThreadedDriver
 {
 	private:
 		const char *_portname;
-		Serial *_port;
-		Scribbler *_scribbler;
+		Serial     *_port;
+		Scribbler  *_scribbler;
 
-		double _framerate; // duration of each frame (in seconds)
+		// Timing
+		timeval _t0,
+		        _t1;
+		double  _framerate; // duration of each frame (in seconds)
 
 		// Player interfaces.
-
 		// Position2D
 		bool                             _hasPosition;
 		player_devaddr_t                 _position_addr;

@@ -86,5 +86,9 @@ test:
 square: src/square-fribbler.cpp
 	$(CC) src/square-fribbler.cpp `pkg-config --cflags --libs playerc++` -o square-fribbler
 
+# Calibration program
+calibration: src/calibration.cpp
+	$(CC) src/calibration.cpp -I./include/Scribbler -L./lib -lscribbler
+
 clean:
 	rm -rf *.a *.so *.o a.out log1 test-fribbler square-fribbler

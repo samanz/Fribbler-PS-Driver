@@ -1,3 +1,6 @@
+20091120 - Mark:
+	1. Added high resolution timing to the player driver.
+
 20091118 - Mark:
 	1. Fixed a bug in John's code:
 	        Scribbler::drive() -left and right were reversed.

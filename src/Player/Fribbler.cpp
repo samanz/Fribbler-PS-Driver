@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 
 // John's global debug flag
 #ifdef FRIBBLER_DEBUG
@@ -183,7 +184,9 @@ void Fribbler::Main()
 
 	while (1) {
 		pthread_testcancel(); // required
-		time_t t0 = time(0); // time the frame
+		if (gettimeofday(&_t0, 0) != 0) { // start of the frame
+			// FIXME: error checking?
+		}
 
 		// Update our robot: read sensors and collect relevant data.
 		if (_scribbler->updateScribblerSensors() == 0) {
@@ -205,8 +208,13 @@ void Fribbler::Main()
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
-		usleep(FRIBBLER_CYCLE);
-		_framerate = difftime(time(0), t0); // time the frame
+		usleep(FRIBBLER_CYCLE); // Breathe!
+		if (gettimeofday(&_t1, 0) != 0) { // end of the frame
+			// FIXME: error checking?
+		}
+		_framerate = (_t1.tv_sec + (_t1.tv_usec / 1000000.0)) -
+		             (_t0.tv_sec + (_t0.tv_usec / 1000000.0));
+		if (_framerate < 0) _framerate = 0; // why is this even necessary?
 	}
 
 	#ifdef FRIBBLER_DEBUG
@@ -303,12 +311,17 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Turning counter-clockwise.\n");
 			#endif
+			cmd->vel.px = 0.0; // we're turning; no x velocity
 			// FIXME: this is specific to Scribbler #15
-			// FIXME: turn at max speed for now
-			cmd->vel.pa = 3.85 ; // 3.85 radians/second
-			// counter-clockwise turn: right-wheel dominant
-			rightMotor =  100;
-			leftMotor  = -100;
+			if (cmd->vel.pa > 3.0) {
+				cmd->vel.pa = 3.85 ; // radians/second
+				rightMotor =  100;
+				leftMotor  = -100;
+			} else {
+				cmd->vel.pa = 2.02 ; // radians/second
+				rightMotor =  60;
+				leftMotor  = -60;
+			}
 		} else if (cmd->vel.pa < 0) {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Turning clockwise.\n");
@@ -320,9 +333,10 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			#endif
 			// FIXME: this is specific to Scribbler #15
 			// FIXME: drive at max speed for now
-			cmd->vel.px = 0.3; // 0.3 meters/second
+			cmd->vel.px = 0.3; // meters/second
+			cmd->vel.pa = 0;
 			leftMotor = 100;
-			int error_correction = -16;
+			int error_correction = -5;
 			if (leftMotor + error_correction < 10) {
 				// too slow to make any reasonable difference;
 				// keep the motors at the same rate

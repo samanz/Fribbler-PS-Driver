@@ -2,6 +2,7 @@
 #include <libplayerc++/playerc++.h>
 #include <unistd.h>
 #include <ctime>
+#include <sys/time.h>
 using namespace std;
 using namespace PlayerCc;
 
@@ -14,22 +15,22 @@ int main(int argc, char **argv)
 	enum { STRAIGHT, TURNING } state;
 	int stateChanges = 0;
 
-	// timing
-	time_t t0;
-	double framerate = 0.00;
-	double tElapsed  = 0.00;
-
 	// odometry
-	double distance  = 1.5; // in meters
-	double theta     = 1.5708; // pi/2 radians
+	double distance  = 1.2; // in meters
+	double theta     = 3.14159256/2.0; // pi/2 radians
 
-	// initial state
+	// initial state: STAIGHT
 	state = STRAIGHT;
 	pp.ResetOdometry();
 	pp.SetSpeed(1, 0);
+	// initial state: TURNING
+/*
+	state = TURNING;
+	pp.ResetOdometry();
+	pp.SetSpeed(0, 1);
+*/
 
-	while (stateChanges < 4) {
-		t0 = time(0); // start of frame
+	while (stateChanges < 8) {
 		robot.Read(); // read from proxies
 
 		cout << (state == STRAIGHT ? "straight" : "turning") << "::displacement = " << (state == STRAIGHT ? pp.GetXPos() : pp.GetYaw()) << endl;
@@ -59,8 +60,6 @@ int main(int argc, char **argv)
 			} break;
 			default: break;
 		}
-		framerate = difftime(time(0), t0); // time the frame
-		tElapsed += framerate;
 	}
 
 	pp.SetSpeed(0,0);
