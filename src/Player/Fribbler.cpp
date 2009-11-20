@@ -194,9 +194,11 @@ void Fribbler::Main()
 
 		// Update the interfaces that we're providing.
 		// Position2D
-		_position_data.pos.px += _framerate * _position_data.vel.px;
-		_position_data.pos.py += _framerate * _position_data.vel.py;
-		_position_data.pos.pa += _framerate * _position_data.vel.pa;
+		Lock();
+			_position_data.pos.px += _framerate * _position_data.vel.px;
+			_position_data.pos.py += _framerate * _position_data.vel.py;
+			_position_data.pos.pa += _framerate * _position_data.vel.pa;
+		Unlock();
 
 		// Publish our updated interfaces.
 		// Position2D
@@ -237,6 +239,19 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		// Acknowledge the request; publish the geometry.
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_GET_GEOM, (void *)&_position_geom, sizeof(player_position2d_geom_t), 0);
 		return 0;
+	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_RESET_ODOM, _position_addr)) {
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "Received Position2D request to reset odometry.\n");
+		#endif
+		// Reset the odometry.
+		Lock();
+			_position_data.pos.px = 0;
+			_position_data.pos.py = 0;
+			_position_data.pos.pa = 0;
+		Unlock();
+		// Acknowledge the request.
+		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_RESET_ODOM);
+		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_MOTOR_POWER, _position_addr)) {
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D motor power request.\n");
@@ -261,22 +276,17 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Received Position2D odometry request.\n");
 		#endif
+		// Reset the odometry.
+		Lock();
+			_position_data.pos.px = 0;
+			_position_data.pos.py = 0;
+			_position_data.pos.pa = 0;
+		Unlock();
 		// Fill in the current odometry.
 		memset(&_position_odom, 0, sizeof(player_position2d_set_odom_req_t));
 		_position_odom.pose = _position_data.pos;
 		// Acknowledge the request; publish the odometry.
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_SET_ODOM, (void *)&_position_odom, sizeof(player_position2d_set_odom_req_t), 0);
-		return 0;
-	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_RESET_ODOM, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
-			fprintf(stderr, "Received Position2D request to reset odometry.\n");
-		#endif
-		// Reset the odometry.
-		_position_data.pos.px = 0;
-		_position_data.pos.py = 0;
-		_position_data.pos.pa = 0;
-		// Acknowledge the request.
-		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_RESET_ODOM);
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
 		#ifdef FRIBBLER_DEBUG
@@ -342,8 +352,10 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 			#endif
 		} else {
 			// Update our position data.
-			_position_data.vel.px = cmd->vel.px;
-			_position_data.vel.pa = cmd->vel.pa;
+			Lock();
+				_position_data.vel.px = cmd->vel.px;
+				_position_data.vel.pa = cmd->vel.pa;
+			Unlock();
 		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_CAR, _position_addr)) {

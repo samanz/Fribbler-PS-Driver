@@ -39,13 +39,15 @@ int main(int argc, char **argv)
 	double tTotal    = 20.00;
 	double tElapsed  = 0.0;
 
-	pp->SetSpeed(100, 1);
+	pp->SetSpeed(1, 0);
 
 	//while (tElapsed <= tTotal) { // turns out that timing is not a certain way of doing things :(
 	fDone = false;
 	while (!fDone) {
 		time_t t0 = time(0); // time the frame
 		robot->Read(); // Read from proxies
+		pp->ResetOdometry();
+		cout << "Xpos: " << pp->GetXPos() << endl;
 
 		// Test to see which methods generate which messages:
 

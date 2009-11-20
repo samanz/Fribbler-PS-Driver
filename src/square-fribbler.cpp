@@ -20,45 +20,41 @@ int main(int argc, char **argv)
 	double tElapsed  = 0.00;
 
 	// odometry
-	double distance  = 1.0; // meter
-	double theta     = 3.14159256/2.0; // pi/2 radians
-	double epsilon   = 0.0;
+	double distance  = 1.5; // in meters
+	double theta     = 1.5708; // pi/2 radians
 
 	// initial state
 	state = STRAIGHT;
+	pp.ResetOdometry();
 	pp.SetSpeed(1, 0);
 
-	while (stateChanges < 1) {
+	while (stateChanges < 4) {
 		t0 = time(0); // start of frame
-		robot.Read(); // Read from proxies
+		robot.Read(); // read from proxies
 
-		cout << (state == STRAIGHT ? "straight" : "turning") << "::epsilon = " << epsilon << endl;
+		cout << (state == STRAIGHT ? "straight" : "turning") << "::displacement = " << (state == STRAIGHT ? pp.GetXPos() : pp.GetYaw()) << endl;
 
 		switch (state) {
 			case STRAIGHT: {
-				if (epsilon >= distance) {
-					// Change state to turning.
+				if (pp.GetXPos() >= distance) {
+					// change state to turning.
 					pp.SetSpeed(0,0); // stop
 					state = TURNING;
 					stateChanges++;
 					pp.ResetOdometry();
-					epsilon = 0.0;
 				} else {
 					pp.SetSpeed(1, 0); // straight
-					epsilon += pp.GetXPos();
 				}
 			} break;
 			case TURNING: {
-				if (epsilon >= theta) {
+				if (pp.GetYaw() >= theta) {
 					// Change state to straight.
 					pp.SetSpeed(0,0); // stop
 					state = STRAIGHT;
 					stateChanges++;
 					pp.ResetOdometry();
-					epsilon = 0.0;
 				} else {
 					pp.SetSpeed(0, 1); // counter-clockwise
-					epsilon += pp.GetYaw();
 				}
 			} break;
 			default: break;

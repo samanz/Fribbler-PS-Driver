@@ -28,10 +28,10 @@ class Fribbler : public ThreadedDriver
 		// Player interfaces.
 
 		// Position2D
-		bool                     _hasPosition;
-		player_devaddr_t         _position_addr;
-		player_position2d_data_t _position_data;
-		player_position2d_geom_t _position_geom;
+		bool                             _hasPosition;
+		player_devaddr_t                 _position_addr;
+		player_position2d_data_t         _position_data;
+		player_position2d_geom_t         _position_geom;
 		player_position2d_set_odom_req_t _position_odom;
 
 	public:
