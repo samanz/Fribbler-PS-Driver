@@ -208,13 +208,16 @@ void Fribbler::Main()
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
-		usleep(FRIBBLER_CYCLE); // Breathe!
+		//usleep(FRIBBLER_CYCLE); // Breathe!
 		if (gettimeofday(&_t1, 0) != 0) { // end of the frame
 			// FIXME: error checking?
 		}
 		_framerate = (_t1.tv_sec + (_t1.tv_usec / 1000000.0)) -
 		             (_t0.tv_sec + (_t0.tv_usec / 1000000.0));
 		if (_framerate < 0) _framerate = 0; // why is this even necessary?
+		#ifdef FRIBBLER_DEBUG
+			fprintf(stderr, "frame: %f s\n", _framerate);
+		#endif
 	}
 
 	#ifdef FRIBBLER_DEBUG

@@ -7,3 +7,14 @@
 			for example) with any kind of certainty. What can we do about this?
 		- After thinking about this some, and checking exactly what kind of feedback we get from position2d, the only solution
 			is to have odometry implemented correctly.
+
+	- Efficiency and Precision
+		- Fribbler::Main(), that is the main control loop averages 0.45 seconds/frame, which is horrible.
+			To give you an idea of how horrible this is, the scribbler can rotate at a rate of roughly
+			2 rad/s, which is its slow rotational speed. At 2 rad/s, each time through the main control loop,
+			the estimated displacement is about 0.9 radians. Now suppose you want to rotate pi/2, i.e. about
+			1.57 radians. After two iterations of the control loop, we will have already driven 1.8 radians,
+			overshooting our target. I can't imagine why the main control loop is taking so long to run, but
+			I hope it's my code that's the cause for the inefficiency because if it's not then that would imply
+			that it's the Player server itself. As it is now, this is far too imprecise to do anything with any
+			kind of accuracy.
