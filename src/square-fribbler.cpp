@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
 	// odometry
 	double distance  = 1.0; // in meters
-	double theta     = 1.5; // pi/2 radians
+	double theta     = 1.7; // pi/2 radians
 
 	// initial state: STAIGHT
 	state = STRAIGHT;

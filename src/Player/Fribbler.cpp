@@ -189,11 +189,13 @@ void Fribbler::Main()
 		}
 
 		// Update our robot: read sensors and collect relevant data.
+/*      No reason to be checking sensors all the time!
 		if (_scribbler->updateScribblerSensors() == 0) {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Scribbler failed to update its sensors.\n");
 			#endif
 		}
+*/
 
 		// Update the interfaces that we're providing.
 		// Position2D
@@ -208,7 +210,7 @@ void Fribbler::Main()
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
 
 		ProcessMessages();
-		//usleep(FRIBBLER_CYCLE); // Breathe!
+		usleep(FRIBBLER_CYCLE); // Breathe!
 		if (gettimeofday(&_t1, 0) != 0) { // end of the frame
 			// FIXME: error checking?
 		}
