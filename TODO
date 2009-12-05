@@ -1,16 +1,3 @@
 Test out picture taking and saving on scribbler
 
-Fribbler Player Driver
-	- Main()
-		- Updating interfaces
-			- Position2D
-				- Calibrating the Scribbler; measuring its velocities, etc. (This is a lot of work that's time consuming, and not very interesting.)
-				- Related to calibration... we need odometry!
-	- ProcessMessage()
-		- Interfaces
-			- Position2D
-				- The Scribbler is nonholonomic, so there's limited degrees of freedom
-				- Basically we can only SetSpeed in a single direction, but we can also translate the yaw into a turn.
-				- Probably the best movement type for the Scribbler is Carlike (speed and angle of steering)
-				- Overall, we need to discuss this sometime
-	- etc. (as the need arises)
+Linear interpolation on the range of the Scribbler's velocities for consistent behavior with the position2D interface.

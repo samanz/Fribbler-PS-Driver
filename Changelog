@@ -1,3 +1,6 @@
+20091204 - Mark:
+	1. Fixed the main loop latency in the driver.
+
 20091120 - Mark:
 	1. Added high resolution timing to the player driver.
 

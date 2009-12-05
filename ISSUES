@@ -1,3 +1,9 @@
+---------- CURRENT ISSUES -----------------------------------------------------------------------------------------------------
+
+	- None, and let's keep it that way!
+
+---------- FIXED ISSUES -------------------------------------------------------------------------------------------------------
+
 	- Bluetooth LATENCY! (I think)
 		- Does player provide a feedback mechanism to alert the client when the commands have been sent and acknowledged?
 			For example: You want to drive for 5 seconds, so you start a clock and send the drive command. However,
