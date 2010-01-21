@@ -1,16 +1,20 @@
 #include <iostream>
+#include <fstream>
 #include <libplayerc++/playerc++.h>
 #include <unistd.h>
 #include <ctime>
 #include <sys/time.h>
+#include <stdio.h>
+#include <time.h>
 using namespace std;
 using namespace PlayerCc;
 
+PlayerClient    robot;
+Position2dProxy pp(&robot, 0);
+CameraProxy 	cp(&robot);
+
 int main(int argc, char **argv)
 {
-	PlayerClient    robot;
-	Position2dProxy pp(&robot, 0);
-
 	// ghetto state machine
 	enum { STRAIGHT, TURNING } state;
 	int stateChanges = 0;
@@ -31,10 +35,10 @@ int main(int argc, char **argv)
 	pp.ResetOdometry();
 	pp.SetSpeed(0, 1);
 */
-
+  time_t seconds;
 	while (stateChanges < 8) {
 		robot.Read(); // read from proxies
-
+		
 		cout << (state == STRAIGHT ? "straight" : "turning") << "::displacement = " << (state == STRAIGHT ? pp.GetXPos() : pp.GetYaw()) << endl;
 
 		switch (state) {
@@ -70,6 +74,5 @@ int main(int argc, char **argv)
 
 	pp.SetSpeed(0,0);
 	sleep(1);
-
 	return 0;
 }

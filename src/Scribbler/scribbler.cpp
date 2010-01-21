@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <algorithm>
 
 #include <assert.h>
 
@@ -32,7 +33,6 @@ void log(char const str[])
 	fclose(fd);
 }
 char	logchunk[512];
-
 
 /************************************************************************/
 /* A object of Scribbler class manages the dialog with a Fluke          */
@@ -206,7 +206,7 @@ Data	*Scribbler::takePhotoJPEG()
 	}
 	jpeg->append(*body);
 	delete body;
-
+		
 	return jpeg;
 }
 
@@ -1069,6 +1069,104 @@ Data	*Scribbler::getImage()
 		return data;
 	}	
 }
+/************************************************************************/
+/* getImage								*/
+/* returns a large Data object (about 50K Bytes) specifing the image	*/
+/* (not sure of the format and don't expect this to be used much)	*/
+/************************************************************************/
+unsigned char * Scribbler::getRawYUV()
+{
+	unsigned char ch;
+	int size = 192*256;
+	unsigned char * data = new unsigned char[size];
+
+	mInSync = 0;
+	flushInputBuffer();
+
+	send(GET_IMAGE);
+	flushOutputBuffer();
+	for(int i=0; i < size; i++) {
+		ch = getCharBlocking();
+		data[i] = ch;
+	}
+	return data;
+}
+unsigned char * Scribbler::takePictureYUV() {
+		int width = 256;
+		int height = 192;
+		
+		int rgb_buffer_size = width*height*3;
+
+		unsigned char * yuv_buffer = getRawYUV();
+		unsigned char * rgb_buffer = new unsigned char[rgb_buffer_size];
+		memset(rgb_buffer, 'B', sizeof(unsigned char) * width * height * 3);
+
+		//int size = width* height;
+
+		//Black Voodoo Magic, since I don't know the YUV encode format
+		int vy, vu, y1v, y1u, uy, uv, y2u, y2v;
+
+		int Y = 0,U = 0,V = 0;
+
+		//printf("Decoding Image\n");
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				if( j >= 3 ) {
+					vy = -1; vu = -2; y1v = -1; y1u = -3; uy = -1; uv = -2;
+					y2u = -1; y2v = -3;
+				}
+				else {
+					vy = 1; vu = 2; y1v = 3; y1u = 1; uy = 1; uv = 2; 
+					y2u = 3; y2v = 1;
+				}
+
+				//VYUY VYUY VYUY
+				if( j % 4 == 0 ) {
+					V = (int)yuv_buffer[i * width + j];
+					Y = (int)yuv_buffer[i * width + j + vy];
+					U = (int)yuv_buffer[i * width + j + vu];
+				}
+				if( j % 4 == 1 ) {
+					Y = (int)yuv_buffer[i * width + j];
+					V = (int)yuv_buffer[i * width + j + y1v];
+					U = (int)yuv_buffer[i * width + j + y1u];
+				}
+				if( j % 4 == 2 ) {
+					U = (int)yuv_buffer[i * width + j];
+					Y = (int)yuv_buffer[i * width + j + uy];
+					V = (int)yuv_buffer[i * width + j + uv];
+				}
+				if( j % 4 == 3 ) {				 
+					Y = (int)yuv_buffer[i * width + j];
+					U = (int)yuv_buffer[i * width + j + y2u];
+					V = (int)yuv_buffer[i * width + j + y2v];
+				}
+
+				assert( Y <= 255 && U <= 255 && V <= 255);
+
+				/*if(i == 0 && j == 0) {
+					printf("Y: %i U: %i V: %i\n", Y, U, V);
+				}*/
+
+				U = U - 128;
+				V = V - 128;
+
+				double R =  
+					std::max(std::min(Y + 1.13983 * V, 255.0), 0.0);
+				double G =
+					std::max(std::min(Y - 0.39466 * U - 0.7169 * V, 255.0),0.0);
+				double B =
+					std::max(std::min(Y + 2.03211 * U, 255.0), 0.0);
+
+				rgb_buffer[(i * width + j) * 3 + 0] = (unsigned char)R;
+				rgb_buffer[(i * width + j) * 3 + 1] = (unsigned char)G;
+				rgb_buffer[(i * width + j) * 3 + 2] = (unsigned char)B;
+			}
+		}
+		//printf("Image Decoded\n");
+		return rgb_buffer;
+}
+
 Data	*Scribbler::readJpegHeader()
 {
 	Data	*data;
@@ -1120,6 +1218,7 @@ Data	*Scribbler::readJpegScan()
 	}
 	return scan;
 }
+
 Data	*Scribbler::readJpegGrayHeader()
 {
 	Data	*data;

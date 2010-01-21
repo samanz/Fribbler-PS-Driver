@@ -9,7 +9,7 @@ CP = cp
 PLAYER_OUTPUT  = libFribbler.so
 PLAYER_OBJECTS = Fribbler.o
 PLAYER_CFLAGS  = -Wall -fPIC -c -I./include `pkg-config --cflags playercore`
-PLAYER_LFLAGS  = -Wall -shared -nostartfiles `pkg-config --libs playercore`
+PLAYER_LFLAGS  = -Wall -shared -nostartfiles `pkg-config --libs playercore` -L/usr/local/lib -lplayerjpeg
 PLAYER_HEADERS_DIR = include/Player
 PLAYER_SOURCES_DIR = src/Player
 PLAYER_SOURCES = $(PLAYER_SOURCES_DIR)/Fribbler.cpp
@@ -46,10 +46,12 @@ all:
 	$(MAKE) test-fribbler
 	# Square driving
 	$(MAKE) square
+	# Player cam
+	$(MAKE) playercam
 
 # Player driver (Fribbler)
 Fribbler: $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS)
-	$(CC) $(PLAYER_LFLAGS) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) -o $(PLAYER_OUTPUT)
+	$(CC)  $(PLAYER_LFLAGS) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) -o $(PLAYER_OUTPUT)
 
 Fribbler.o: $(PLAYER_SOURCES) $(PLAYER_HEADERS) $(SCRIBBLER_HEADERS)
 	$(CC) $(PLAYER_CFLAGS) $(PLAYER_SOURCES_DIR)/Fribbler.cpp
@@ -85,6 +87,10 @@ test:
 # Square program
 square: src/square-fribbler.cpp
 	$(CC) src/square-fribbler.cpp `pkg-config --cflags --libs playerc++` -o square-fribbler
+
+#playercam	
+playercam: src/playercam.cpp
+		$(CC) src/playercam.cpp `pkg-config --cflags --libs playerc++` `pkg-config --libs --cflags gtk+-2.0` -o newplayercam
 
 # Calibration program
 calibration: src/calibration.cpp

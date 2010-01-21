@@ -25,8 +25,14 @@ class Fribbler : public ThreadedDriver
 
 		// Timing
 		timeval _t0,
-		        _t1;
+				_t1;
+		time_t seconds;	  
 		double  _framerate; // duration of each frame (in seconds)
+		int		_camrate; // Camera framrate
+		bool 	_firstPic;
+		
+		// Camera
+		unsigned char * picture;
 
 		// Player interfaces.
 		// Position2D
@@ -35,6 +41,7 @@ class Fribbler : public ThreadedDriver
 		player_position2d_data_t         _position_data;
 		player_position2d_geom_t         _position_geom;
 		player_position2d_set_odom_req_t _position_odom;
+		player_devaddr_t				 _camera_addr;
 
 	public:
 		Fribbler(ConfigFile *cf, int section);

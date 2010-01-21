@@ -12,12 +12,59 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include <libplayercore/playercore.h>
+#include <libplayerjpeg/playerjpeg.h>
+
+
 // John's global debug flag
 #ifdef FRIBBLER_DEBUG
 	int gDebugging = 1;
 #else
 	int gDebugging = 0;
 #endif
+
+// Uses libplayerjpeg's decompress function to get rgb values from jpeg and stretches out jpeg
+unsigned char * jpegStretch(unsigned char * jpegBuffer, int &size) {
+	unsigned char * decompressedBuffer;
+	unsigned char * resizedDecompressedBuffer;
+  	decompressedBuffer
+  	= (unsigned char*)malloc(sizeof(unsigned char)
+  			* 128 * 192 * 3);
+  	resizedDecompressedBuffer
+  	= (unsigned char*)malloc(sizeof(unsigned char)
+  			* 256 * 192 * 3);
+	jpeg_decompress(decompressedBuffer, (256*192*3), jpegBuffer, size);
+  	for(int h = 0; h < 192; h++) {
+  		for(int w = 0; w < 128; w++) 
+  			for(int rgb = 0; rgb < 3; rgb++) {
+  				resizedDecompressedBuffer
+  					[(h * 256 * 3) + (2 * w * 3) + rgb]
+  					= decompressedBuffer
+  					[(h * 128 * 3) + (w * 3) + rgb];
+  				resizedDecompressedBuffer
+  					[(h * 256 * 3) + ((2 * w + 1) * 3) + rgb]
+  					= decompressedBuffer
+  					[(h * 128 * 3) + (w * 3) + rgb];
+  			}
+  		
+  	}
+
+	free(decompressedBuffer);
+	
+	return resizedDecompressedBuffer;
+}
+
+// Gets Jpeg from scribbler, stretches it, and returns it in the correct format
+unsigned char * expandedPhotoJPEG(Scribbler * _scribbler) {
+	Data * jpeg = _scribbler->takePhotoJPEG();
+	unsigned char * adata = (unsigned char *)jpeg->getData();
+	int dataSize = jpeg->getDataSize();
+	unsigned char * expanded = jpegStretch(adata, dataSize);
+	delete jpeg;
+	return expanded;
+}
+
+
 
 // Driver Class Factory
 Driver* Fribbler_Init(ConfigFile *cf, int section)
@@ -52,6 +99,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_hasPosition = false; // assume no
 	memset(&_position_addr, 0, sizeof(player_devaddr_t));
 	memset(&_position_data, 0, sizeof(player_position2d_data_t));
+    memset(&_camera_addr, 0, sizeof(player_devaddr_t));
 
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
@@ -74,6 +122,23 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 			fprintf(stderr, "Fribbler is providing a Position2D interface.\n");
 		#endif
 	}
+	// Read framerate from the config file.
+	_camrate = cf->ReadInt(section, "framerate", 0);
+	_firstPic = true; // Is this this first picture to be taken?
+	seconds = time(NULL);
+	
+	// Add camera interface
+	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, NULL) == 0)
+      {
+
+         if (this->AddInterface(_camera_addr) != 0)
+            {
+               PLAYER_ERROR("Could not add Camera interface for SRV-1");
+               this->SetError(-1);
+               return;
+            }
+      }
+   
 
 	#ifdef FRIBBLER_DEBUG
 		fprintf(stderr, "Fribbler object was created successfully.\n");
@@ -184,10 +249,9 @@ void Fribbler::Main()
 
 	while (1) {
 		pthread_testcancel(); // required
-		if (gettimeofday(&_t0, 0) != 0) { // start of the frame
+		if (gettimeofday(&_t0, 0) != 0) {
 			// FIXME: error checking?
 		}
-
 		// Update our robot: read sensors and collect relevant data.
 /*      No reason to be checking sensors all the time!
 		if (_scribbler->updateScribblerSensors() == 0) {
@@ -196,18 +260,47 @@ void Fribbler::Main()
 			#endif
 		}
 */
-
+		player_camera_data_t camdata;
+        memset(&camdata, 0, sizeof(camdata));
+        camdata.fdiv = 1; // Not sure what this is?
+        camdata.bpp = 24; // 24 bits per pixel
+		camdata.width = 256;
+        camdata.height = 192;
+        camdata.format = PLAYER_CAMERA_FORMAT_RGB888;
+        camdata.compression = PLAYER_CAMERA_COMPRESS_RAW;
+        camdata.image_count = 256*192*3;
+        
 		// Update the interfaces that we're providing.
-		// Position2D
 		Lock();
+		// Position2D
 			_position_data.pos.px += _framerate * _position_data.vel.px;
 			_position_data.pos.py += _framerate * _position_data.vel.py;
 			_position_data.pos.pa += _framerate * _position_data.vel.pa;
+			
+			int since = difftime(time(NULL), seconds);
+			
+				// Camera data
+				if (camdata.image == NULL)
+                  	camdata.image = (uint8_t *) malloc(camdata.image_count);
+            	else
+               	{
+                  	camdata.image = (uint8_t *) realloc(camdata.image, camdata.image_count);
+               	}
+				// expandedPhotoJPEG converts to a RAW RBG so we're fine here!
+				if((since >= _camrate) || _firstPic) { // _firstPic makes sure that the camera is updated on first access
+					picture = expandedPhotoJPEG(_scribbler);
+					_firstPic = false;
+					seconds = time(NULL);
+				}
+            	memcpy(camdata.image, picture, camdata.image_count); 
+		
+     
 		Unlock();
 
 		// Publish our updated interfaces.
 		// Position2D
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
+        Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata, sizeof(camdata), 0);
 
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE); // Breathe!
@@ -409,6 +502,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		#endif
 		return -1;
 	}
+	// No messages for camera interface, Sam agrees with Carlos... WHY?!
 }
 
 /* NOTE: need the extern to avoid C++ name-mangling */

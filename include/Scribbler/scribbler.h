@@ -2,6 +2,7 @@
 #define SCRIBBLER
 
 #include <stdio.h>
+#include <algorithm>
 #include "robot.h"
 #include "data.h"
 
@@ -50,12 +51,12 @@ class Scribbler : public Robot
                     
 
   protected:	int	getIntBEnd();
-	long	getLongLEnd();
-	int	getEcho(char ch);	// returns true if we got echo	
-        int     loadScribblerSensors();
-        void    send(int ch);
-	int	getFinalAck(char cmd);
-	int	sendScribblerCommand(char cmd, char data[8]);
+	long getLongLEnd();
+	int	 getEcho(char ch);	// returns true if we got echo
+    int  loadScribblerSensors();
+    void send(int ch);
+	int	 getFinalAck(char cmd);
+	int	 sendScribblerCommand(char cmd, char data[8]);
   public:
         Scribbler(Serial &port);
         virtual ~Scribbler();
@@ -81,21 +82,25 @@ class Scribbler : public Robot
 	int		drive(int left, int right, int duration = 0);
 	int		setColorId(int Id, YUVRange &range);
 	int		getInfo(char *);
-	Data		*takePhotoJPEG();
+	Data	*takePhotoJPEG();
+	//unsigned char * jpegStretch(unsigned char * jpegBuffer, int &size);
+	//unsigned char * expandedPhotoJPEG(); 
+	unsigned char *getRawYUV();
+	unsigned char *takePictureYUV();
 
 
 /****************************************************************/
 /* Functions that access the underling robot, The Scribbler	*/
 /****************************************************************/
 
-        int     beep(int freq, int duration);
-        int     stop();
+    int beep(int freq, int duration);
+    int stop();
 	int	setScribblerLeftLed(int value);
 	int	setScribblerCenterLed(int value);
 	int	setScribblerRightLed(int value);
 	int	setScribblerAllLeds(int value);
 	int	setScribblerLeds(int left, int center, int right);
-        int     updateScribblerSensors();
+    int updateScribblerSensors();
 	int	setEchoMode(int);
 	int	setScribblerData(char data[8]);
 	int	getScribblerData(char data[8]);
@@ -135,6 +140,7 @@ class Scribbler : public Robot
 	Data	*getImage();
 
 	Data	*takePhotoGrayJPEG();
+	
 
 // returns the number of pulses recieved
 // high value indicates obsticle near
