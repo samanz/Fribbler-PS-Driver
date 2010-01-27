@@ -8,8 +8,9 @@ CP = cp
 # Player driver (Fribbler) definitions
 PLAYER_OUTPUT  = libFribbler.so
 PLAYER_OBJECTS = Fribbler.o
-PLAYER_CFLAGS  = -Wall -fPIC -c -I./include `pkg-config --cflags playercore`
-PLAYER_LFLAGS  = -Wall -shared -nostartfiles `pkg-config --libs playercore` -L/usr/local/lib -lplayerjpeg
+PLAYER_CFLAGS  = -Wall -fPIC -c -I./include -I./MetroUtil/include `pkg-config --cflags playercore`
+PLAYER_LFLAGS  = -Wall -Wl,-z,defs -shared
+PLAYER_LIBS    = -L./MetroUtil/lib -lMetrobotics -L/usr/local/lib -lplayerjpeg `pkg-config --libs playercore`
 PLAYER_HEADERS_DIR = include/Player
 PLAYER_SOURCES_DIR = src/Player
 PLAYER_SOURCES = $(PLAYER_SOURCES_DIR)/Fribbler.cpp
@@ -51,7 +52,7 @@ all:
 
 # Player driver (Fribbler)
 Fribbler: $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS)
-	$(CC)  $(PLAYER_LFLAGS) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) -o $(PLAYER_OUTPUT)
+	$(CC)  $(PLAYER_LFLAGS) -o $(PLAYER_OUTPUT) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) $(PLAYER_LIBS)
 
 Fribbler.o: $(PLAYER_SOURCES) $(PLAYER_HEADERS) $(SCRIBBLER_HEADERS)
 	$(CC) $(PLAYER_CFLAGS) $(PLAYER_SOURCES_DIR)/Fribbler.cpp
@@ -97,4 +98,4 @@ calibration: src/calibration.cpp
 	$(CC) src/calibration.cpp -I./include/Scribbler -L./lib -lscribbler
 
 clean:
-	rm -rf *.a *.so *.o a.out log1 test-fribbler square-fribbler
+	rm -rf *.a *.so *.o a.out log1 test-fribbler square-fribbler newplayercam

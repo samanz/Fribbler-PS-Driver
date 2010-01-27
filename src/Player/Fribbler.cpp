@@ -5,6 +5,11 @@
 #include "Player/Fribbler.h"
 #include "Scribbler/PosixSerial.h"
 #include "Scribbler/scribbler.h"
+#include "metrobotics.h"
+using namespace metrobotics;
+
+#include <stdexcept>
+using namespace std;
 
 #include <stdio.h>
 #include <string.h>
@@ -121,7 +126,56 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 		#ifdef FRIBBLER_DEBUG
 			fprintf(stderr, "Fribbler is providing a Position2D interface.\n");
 		#endif
+		// Extract velocity data if any
+		int points = 0;
+		// Linear Velocity
+		linear_velocity.clear();
+		points = cf->GetTupleCount(section, "linear_velocity");
+		if (points > 0) {
+			for (int i = 0, j = 0; i < points; i += j) {
+				RealVector3 v;
+				// Each point has three components.
+				for (j = 0; i+j < points && j < 3; ++j) {
+					v[j] = cf->ReadTupleLength(section, "linear_velocity", i+j, 0);
+				}
+				// Complete point?
+				if (j == 3) {
+					linear_velocity.insert(v);
+				}
+			}
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Linear velocity data is set: %d points recorded.\n", linear_velocity.size());
+			#endif
+		} else {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "No linear velocity data: disabling driving capability.\n");
+			#endif
+		}
+		// Angular Velocity
+		angular_velocity.clear();
+		points = cf->GetTupleCount(section, "angular_velocity");
+		if (points > 0) {
+			for (int i = 0, j = 0; i < points; i += j) {
+				RealVector3 v;
+				// Each point has three components.
+				for (j = 0; i+j < points && j < 3; ++j) {
+					v[j] = cf->ReadTupleLength(section, "angular_velocity", i+j, 0);
+				}
+				// Complete point?
+				if (j == 3) {
+					angular_velocity.insert(v);
+				}
+			}
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Angular velocity data is set: %d points recorded.\n", angular_velocity.size());
+			#endif
+		} else {
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "No angular velocity data: disabling turning capability.\n");
+			#endif
+		}
 	}
+
 	// Read framerate from the config file.
 	_camrate = cf->ReadInt(section, "framerate", 0);
 	_firstPic = true; // Is this this first picture to be taken?
@@ -400,52 +454,60 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		// Since the Scribbler is nonholonomic, ignore the y value.
 		int leftMotor = 0, rightMotor = 0; // set the motors appropriately before calling Scribbler::drive()
 		// FIXME:  keeping turning and driving mutually exclusive for now to keep things simple
-		// FIXME: get rid of the magic numbers!
-		// turning has precedence
-		if (cmd->vel.pa > 0) {
+		// Case 1: Turning has precedence!
+		if (cmd->vel.pa) {
 			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Turning counter-clockwise.\n");
+				if (cmd->vel.pa > 0) {
+					fprintf(stderr, "Turning counter-clockwise.\n");
+				} else {
+					fprintf(stderr, "Turning clockwise.\n");
+				}
 			#endif
-			cmd->vel.px = 0.0; // we're turning; no x velocity
-			// FIXME: this is specific to Scribbler #15
-			if (cmd->vel.pa > 3.0) {
-				cmd->vel.pa = 3.85 ; // radians/second
-				rightMotor =  100;
-				leftMotor  = -100;
-			} else {
-				cmd->vel.pa = 2.02 ; // radians/second
-				rightMotor =  60;
-				leftMotor  = -60;
+			try {
+				RealVector3 v = angular_velocity.interpolate(cmd->vel.pa);
+				cmd->vel.px = 0;
+				cmd->vel.pa = v[0];
+				leftMotor  = static_cast<int>(v[1]);
+				rightMotor = static_cast<int>(v[2]);
+			} catch (domain_error e) {
+				if (angular_velocity.empty()) {
+					fprintf(stderr, "Turning is disabled: no angular velocity data!\n");
+				} else {
+					fprintf(stderr, "Cannot turn beyond the physical limits of the Scribbler!\n");
+				}
+				cmd->vel.px = 0;
+				cmd->vel.pa = 0;
+				leftMotor = 0;
+				rightMotor = 0;
 			}
-		} else if (cmd->vel.pa < 0) {
+		// Case 2: Straight driving!
+		} else if (cmd->vel.px) {
 			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Turning clockwise.\n");
+				if (cmd->vel.px > 0) {
+					fprintf(stderr, "Driving forward.\n");
+				} else {
+					fprintf(stderr, "Driving backward.\n");
+				}
 			#endif
-			// FIXME: yea...
-		} else if (cmd->vel.px > 0) { // forward calibration
-			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Driving forward.\n");
-			#endif
-			// FIXME: this is specific to Scribbler #15
-			// FIXME: drive at max speed for now
-			cmd->vel.px = 0.3; // meters/second
-			cmd->vel.pa = 0;
-			leftMotor = 100;
-			int error_correction = -5;
-			if (leftMotor + error_correction < 10) {
-				// too slow to make any reasonable difference;
-				// keep the motors at the same rate
-				rightMotor = leftMotor;
-			} else {
-				// otherwise compensate for error
-				rightMotor = leftMotor + error_correction;
+			try {
+				RealVector3 v = linear_velocity.interpolate(cmd->vel.px);
+				cmd->vel.px = v[0];
+				cmd->vel.pa = 0;
+				leftMotor  = static_cast<int>(v[1]);
+				rightMotor = static_cast<int>(v[2]);
+			} catch (domain_error e) {
+				if (linear_velocity.empty()) {
+					fprintf(stderr, "Driving is disabled: no linear velocity data!\n");
+				} else {
+					fprintf(stderr, "Cannot drive beyond the physical limits of the Scribbler!\n");
+				}
+				cmd->vel.px = 0;
+				cmd->vel.pa = 0;
+				leftMotor = 0;
+				rightMotor = 0;
 			}
-		} else if (cmd->vel.px < 0) { // reverse calibration
-			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Driving backward.\n");
-			#endif
-			// FIXME: yea...
-		} else { // stop!
+		// Case 3: Stop!
+		} else {
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Stopping.\n");
 			#endif

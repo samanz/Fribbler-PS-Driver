@@ -10,6 +10,8 @@
 
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
+#include "metrobotics.h"
+using namespace metrobotics;
 
 Driver* Fribbler_Init(ConfigFile *cf, int section);
 void Fribbler_Register(DriverTable *table);
@@ -33,6 +35,10 @@ class Fribbler : public ThreadedDriver
 		
 		// Camera
 		unsigned char * picture;
+
+		// Velocity mapping
+		Lerp<3> linear_velocity;
+		Lerp<3> angular_velocity;
 
 		// Player interfaces.
 		// Position2D
