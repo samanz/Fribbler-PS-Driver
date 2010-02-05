@@ -51,7 +51,7 @@ int main( int argc, char *argv[])
 
 	robot.setForwardness(0); // Scribbler Forward
 
-        robot.beep(512, 500);
+    robot.beep(512, 500);
 
 	for (int i = 0;;i++)
 	{

@@ -32,7 +32,7 @@ Data::Data(DataSource &s, int mode)
 	mData = new char[mMax];
 	read(s, mode);
 }
-void	Data::extend(long howMuch)
+void Data::extend(long howMuch)
 {
 	long	newMax; 
 	char	*newData;

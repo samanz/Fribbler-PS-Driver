@@ -1321,7 +1321,7 @@ int 	Scribbler::setBitmapParams(unsigned char delay,
 /* Black-and-White Image. This is then compressed by Run Length Encoding*/
 /* and returned as Data Object typically a few hundred bytes at most	*/
 /************************************************************************/
-Data	*Scribbler::getCompressedBitmap()
+Data * Scribbler::getCompressedBitmap()
 {
 	send(GET_RLE);
 	flushOutputBuffer();
@@ -1633,16 +1633,47 @@ int	Scribbler::getScribblerIR(int ir)
 	}
 	return -1;
 }
-
-		
-
-
-
-		
-		
-
-
-
-
-		
 /************************************************************************/
+
+// Gets a blob image in bw format
+unsigned char * Scribbler::getBlobImage() {
+	Data * rle = getCompressedBitmap();
+	unsigned char * data_buffer = (unsigned char *)rle->getData();
+	int size = rle->getDataSize();
+	int width = 256;
+	int height = 192;
+
+	unsigned char * blobs 
+		= (unsigned char *)malloc(sizeof(unsigned char) * (width+1) 
+				* (height + 1));
+	
+	int inside = 0;
+	int counter = 0;
+	int val = 128;
+	int px = 0;
+
+	for(int i = 0; i < height; i++) {
+		for(int j = 0; j < width; j+=4) {
+			if(counter < 1 && px < size) {
+				counter = (int)data_buffer[px];
+				px += 1;
+				counter = (counter << 8) | data_buffer[px];
+				px += 1;
+				//printf("Counter %i\n", counter);
+				if(inside) {
+					val = 0;
+					inside = 0;
+				}
+				else {
+					val = 255;
+					inside = 1;
+				}
+			}
+			for(int k = 0; k < 4; k++) {
+				blobs[(i * width) + j + k] = val;
+			}
+			counter -=  1;
+		}
+	}
+	return blobs;	
+}

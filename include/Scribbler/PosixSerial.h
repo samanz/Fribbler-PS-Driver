@@ -18,14 +18,14 @@ class PosixSerial : public Serial
 
 	virtual int	getChar(unsigned char &);
 	virtual int	getBlock(char *buf, unsigned long);
-		void	flushInput();
+	void	flushInput();
 
 
 	virtual	int	takeChar(unsigned char);
 	virtual int	takeBlock(char *, unsigned long);
-		void	flushOutput();
+	void	flushOutput();
 
 	int	getStatus()		{ return 1; }
-	void	waitForConnection() 	{}
+	void waitForConnection() 	{}
 };
 #endif

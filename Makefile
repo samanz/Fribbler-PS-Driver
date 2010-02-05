@@ -85,6 +85,10 @@ scribbler.o: $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp $(SCRIBBLER_HEADERS_DIR)/scr
 test:
 	$(CC) src/square.cpp -I./include/Scribbler -L./lib -lscribbler
 
+# Sam's blob test program
+find:
+	$(CC) find_missing.cpp -I./include/Scribbler -L./lib -lscribbler -o find-missing
+
 # Square program
 square: src/square-fribbler.cpp
 	$(CC) src/square-fribbler.cpp `pkg-config --cflags --libs playerc++` -o square-fribbler
@@ -92,6 +96,10 @@ square: src/square-fribbler.cpp
 #playercam	
 playercam: src/playercam.cpp
 		$(CC) src/playercam.cpp `pkg-config --cflags --libs playerc++` `pkg-config --libs --cflags gtk+-2.0` -o newplayercam
+
+# Blobfinder-test program
+blobtest: src/blobfinder-test.cpp
+	$(CC) src/blobfinder-test.cpp `pkg-config --cflags --libs playerc++` -o blob-test
 
 # Calibration program
 calibration: src/calibration.cpp

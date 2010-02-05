@@ -100,6 +100,7 @@ class Data
 	void	read(DataSource &s, int mode = BIGENDIAN);
 	void	talk(FILE*);
 };
+
 /************************************************************************/
 /* RLE									*/
 /*									*/
@@ -118,13 +119,4 @@ class	RLE
 	int	generateCharMap(char *&map, char onChar, char offChar);
 	void	talk(FILE*);
 };
-
-
-
-
 #endif
-
-
-
-
-

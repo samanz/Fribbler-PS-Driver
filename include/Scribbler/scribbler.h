@@ -140,6 +140,7 @@ class Scribbler : public Robot
 	Data	*getImage();
 
 	Data	*takePhotoGrayJPEG();
+	unsigned char * getBlobImage();
 	
 
 // returns the number of pulses recieved

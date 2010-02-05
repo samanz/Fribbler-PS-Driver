@@ -7,7 +7,7 @@
 
 #define FRIBBLER_DEBUG 1
 #define FRIBBLER_CYCLE 10000 // 1000000/10000 == 0.01 seconds
-
+#include <vector>
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
 #include "metrobotics.h"
@@ -40,6 +40,7 @@ class Fribbler : public ThreadedDriver
 		Lerp<3> linear_velocity;
 		Lerp<3> angular_velocity;
 
+		bool			_hasCamera;
 		// Player interfaces.
 		// Position2D
 		bool                             _hasPosition;
@@ -48,6 +49,9 @@ class Fribbler : public ThreadedDriver
 		player_position2d_geom_t         _position_geom;
 		player_position2d_set_odom_req_t _position_odom;
 		player_devaddr_t				 _camera_addr;
+		
+		//Blobfinder
+		int ** alreadyIn;
 
 	public:
 		Fribbler(ConfigFile *cf, int section);

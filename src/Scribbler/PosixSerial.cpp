@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <string.h>
+#define B460800 460800
 
 extern int      gDebugging;
 const int       thisModule = 0x0002;
@@ -76,7 +77,7 @@ void    PosixSerial::setupLink()
     	attr.c_cc[ VTIME ] = 1; // timeout in tenths of a second
     	attr.c_cc[ VMIN ] = 0;  // allow read to return 0 characters
 
-	attr.c_ispeed = attr.c_ospeed = B115200;
+		attr.c_ispeed = attr.c_ospeed = B460800; //B115200;
 
 
     	if (tcsetattr(mPortFd, TCSAFLUSH, &attr) < 0)

@@ -59,6 +59,7 @@ unsigned char * jpegStretch(unsigned char * jpegBuffer, int &size) {
 	return resizedDecompressedBuffer;
 }
 
+
 // Gets Jpeg from scribbler, stretches it, and returns it in the correct format
 unsigned char * expandedPhotoJPEG(Scribbler * _scribbler) {
 	Data * jpeg = _scribbler->takePhotoJPEG();
@@ -180,6 +181,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_camrate = cf->ReadInt(section, "framerate", 0);
 	_firstPic = true; // Is this this first picture to be taken?
 	seconds = time(NULL);
+	_hasCamera = false;
 	
 	// Add camera interface
 	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, NULL) == 0)
@@ -187,10 +189,15 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 
          if (this->AddInterface(_camera_addr) != 0)
             {
-               PLAYER_ERROR("Could not add Camera interface for SRV-1");
+               PLAYER_ERROR("Could not add Camera interface for Fribbler");
                this->SetError(-1);
                return;
-            }
+            } else {
+			    _hasCamera = true;
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Fribbler is providing a Camera interface.\n");
+			#endif
+			}
       }
    
 
@@ -330,7 +337,7 @@ void Fribbler::Main()
 			_position_data.pos.px += _framerate * _position_data.vel.px;
 			_position_data.pos.py += _framerate * _position_data.vel.py;
 			_position_data.pos.pa += _framerate * _position_data.vel.pa;
-			
+			if(_hasCamera) {
 			int since = difftime(time(NULL), seconds);
 			
 				// Camera data
@@ -347,15 +354,29 @@ void Fribbler::Main()
 					seconds = time(NULL);
 				}
             	memcpy(camdata.image, picture, camdata.image_count); 
-		
+			}
      
 		Unlock();
 
 		// Publish our updated interfaces.
 		// Position2D
 		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
-        Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata, sizeof(camdata), 0);
+		if(_hasCamera)
+        	Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata, sizeof(camdata), 0);
 
+		/*
+			Uhm, I'm starting because I don't really know the player format for sending blobs yet, k. huh!
+		*/
+		
+		//unsigned char * blobmessage = _scribbler.getBlobImage(); // Assumes for now that correct blob config was set.
+																 // Need to get these values from a color file.
+																 // Also: This returns a B/W image of blob for single color
+																 // Need to change for many colors?
+		//getBlobArray(blobMessage);
+		
+		/*
+			End blob getting. I will move this to the place we get blob messages lata.
+		*/
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE); // Breathe!
 		if (gettimeofday(&_t1, 0) != 0) { // end of the frame
