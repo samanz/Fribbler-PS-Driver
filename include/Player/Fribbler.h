@@ -35,12 +35,16 @@ class Fribbler : public ThreadedDriver
 		
 		// Camera
 		unsigned char * picture;
+		bool			_hasCamera;
+		
+		// Blob image
+		unsigned char * blob_image;
+		bool			_hasBlob;
 
 		// Velocity mapping
 		Lerp<3> linear_velocity;
 		Lerp<3> angular_velocity;
 
-		bool			_hasCamera;
 		// Player interfaces.
 		// Position2D
 		bool                             _hasPosition;
@@ -49,10 +53,8 @@ class Fribbler : public ThreadedDriver
 		player_position2d_geom_t         _position_geom;
 		player_position2d_set_odom_req_t _position_odom;
 		player_devaddr_t				 _camera_addr;
+		player_devaddr_t				 _blob_addr;
 		
-		//Blobfinder
-		int ** alreadyIn;
-
 	public:
 		Fribbler(ConfigFile *cf, int section);
 		virtual ~Fribbler();

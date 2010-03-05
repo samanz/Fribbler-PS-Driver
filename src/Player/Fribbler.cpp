@@ -106,6 +106,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	memset(&_position_addr, 0, sizeof(player_devaddr_t));
 	memset(&_position_data, 0, sizeof(player_position2d_data_t));
     memset(&_camera_addr, 0, sizeof(player_devaddr_t));
+    memset(&_blob_addr, 0, sizeof(player_devaddr_t));
 
 	// Extract the port name from the configuration file.
 	_portname = cf->ReadString(section, "port", 0);
@@ -184,7 +185,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_hasCamera = false;
 	
 	// Add camera interface
-	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, NULL) == 0)
+	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "jpeg") == 0)
       {
 
          if (this->AddInterface(_camera_addr) != 0)
@@ -199,7 +200,22 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 			#endif
 			}
       }
-   
+
+	if (cf->ReadDeviceAddr(&_blob_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "blobimage") == 0)
+    {
+
+       if (this->AddInterface(_blob_addr) != 0)
+          {
+             PLAYER_ERROR("Could not add BlobImage Camera interface for Fribbler");
+             this->SetError(-1);
+             return;
+          } else {
+			    _hasBlob = true;
+			#ifdef FRIBBLER_DEBUG
+				fprintf(stderr, "Fribbler is providing a BlobImage Camera interface.\n");
+			#endif
+			}
+    }
 
 	#ifdef FRIBBLER_DEBUG
 		fprintf(stderr, "Fribbler object was created successfully.\n");
@@ -230,6 +246,7 @@ int Fribbler::MainSetup()
 	#ifdef FRIBBLER_DEBUG
 		fprintf(stderr, "Establishing a connection to the Scribbler.\n");
 	#endif
+	
 	// Create the serial object.
 	if ((_port = new PosixSerial(_portname)) == 0) {
 		PLAYER_ERROR("failed to initialize serial device");
@@ -364,19 +381,6 @@ void Fribbler::Main()
 		if(_hasCamera)
         	Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata, sizeof(camdata), 0);
 
-		/*
-			Uhm, I'm starting because I don't really know the player format for sending blobs yet, k. huh!
-		*/
-		
-		//unsigned char * blobmessage = _scribbler.getBlobImage(); // Assumes for now that correct blob config was set.
-																 // Need to get these values from a color file.
-																 // Also: This returns a B/W image of blob for single color
-																 // Need to change for many colors?
-		//getBlobArray(blobMessage);
-		
-		/*
-			End blob getting. I will move this to the place we get blob messages lata.
-		*/
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE); // Breathe!
 		if (gettimeofday(&_t1, 0) != 0) { // end of the frame
