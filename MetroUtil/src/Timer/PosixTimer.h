@@ -8,7 +8,7 @@ namespace metrobotics
 	/**
 	 * \class   PosixTimer
 	 *
-	 * \brief   POSIX implementation for a general-purpose high resolution timer.
+	 * \brief   POSIX implementation of the Timer interface.
 	 *
 	 * \details This implementation of the high resolution timer is able to count one-second
 	 *          intervals of time precise to the microsecond.

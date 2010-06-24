@@ -1,0 +1,31 @@
+Introduction:
+    This library was created for the MetroBotics project at CUNY. Its purpose is
+    to provide a framework of commonly used classes and functions that aid in
+    the development of artificial intelligence and robotics applications.
+
+
+Installation:
+    1. Run 'make' to build the library, or 'make DEBUG=0' to build the library
+       without any debugging information included (e.g. release version).
+    2. Run 'make install' to install the headers and library files into
+       the MetroUtil/include and MetroUtil/lib directories.
+    3. Run 'make docs' to install the documentation files into the MetroUtil/doc
+       directory.
+
+
+Usage:
+    1. Include the metrobotics.h header file into your source code.
+            Ex: #include "metrobotics.h"
+    2. All classes and functions in the library exist within the metrobotics
+       namespace.
+            Ex: using namespace metrobotics;
+    3. Link the libMetrobotics.a library file into your project.
+            Ex: g++ foo.cpp -IMetroUtil/include -LMetroUtil/lib -lMetrobotics
+    4. Alternatively, include and link only the sub-components that you are
+       using in your project.
+    5. Read the documentation for information on how to use the library's
+       classes and functions.
+
+
+Metrobotics Home Page:
+    http://bots.sci.brooklyn.cuny.edu/metrobotics/

@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <termios.h>
 #include <string.h>
-#define B460800 460800
 
 extern int      gDebugging;
 const int       thisModule = 0x0002;

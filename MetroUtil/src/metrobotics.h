@@ -50,7 +50,7 @@
  * \section main_references References
  *     <ul>
  *       <li>
- *         <a href="http://agents.sci.brooklyn.cuny.edu/metrobotics/">Metrobotics Home Page</a>
+ *         <a href="http://bots.sci.brooklyn.cuny.edu/metrobotics/">Metrobotics Home Page</a>
  *       </li>
  *       <li>
  *         <a href="http://github.com/Arkainium/MetroUtil">MetroUtil Git Repository</a>
@@ -78,6 +78,8 @@
  */
 
 // [Simply include everything!]
+#include "Communication/Serial.h"
+#include "Communication/PosixSerial.h"
 #include "Math/RealPredicate.h"
 #include "Math/RealEquality.h"
 #include "Math/RealLessThan.h"

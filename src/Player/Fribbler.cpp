@@ -6,7 +6,7 @@
 #include "Scribbler/PosixSerial.h"
 #include "Scribbler/scribbler.h"
 #include "metrobotics.h"
-using namespace metrobotics;
+using metrobotics::RealVector3;
 
 #include <stdexcept>
 using namespace std;
@@ -20,28 +20,27 @@ using namespace std;
 #include <libplayercore/playercore.h>
 #include <libplayerjpeg/playerjpeg.h>
 
-
 // John's global debug flag
-#ifdef FRIBBLER_DEBUG
+#define FRIBBLER_DEBUG 1
+#ifdef SCRIBBLER_DEBUG // Enable this at your own risk!
 	int gDebugging = 1;
 #else
 	int gDebugging = 0;
 #endif
 
 // Uses libplayerjpeg's decompress function to get rgb values from jpeg and stretches out jpeg
-unsigned char * jpegStretch(unsigned char * jpegBuffer, int &size) {
-	unsigned char * decompressedBuffer;
-	unsigned char * resizedDecompressedBuffer;
-  	decompressedBuffer
-  	= (unsigned char*)malloc(sizeof(unsigned char)
-  			* 128 * 192 * 3);
-  	resizedDecompressedBuffer
-  	= (unsigned char*)malloc(sizeof(unsigned char)
-  			* 256 * 192 * 3);
-	jpeg_decompress(decompressedBuffer, (256*192*3), jpegBuffer, size);
+unsigned char* jpegStretch(unsigned char * jpegBuffer, int &size) {
+	if (jpegBuffer == 0 || size <= 0) return 0;
+	const size_t oldSize = 128 * 192 * 3;
+	const size_t newSize = 256 * 192 * 3;
+	unsigned char decompressedBuffer[oldSize];
+	unsigned char* resizedDecompressedBuffer = new unsigned char[newSize];
+	if (resizedDecompressedBuffer == 0) return 0;
+	jpeg_decompress(decompressedBuffer, oldSize, jpegBuffer, size);
   	for(int h = 0; h < 192; h++) {
-  		for(int w = 0; w < 128; w++) 
+  		for(int w = 0; w < 128; w++) {
   			for(int rgb = 0; rgb < 3; rgb++) {
+				// This is some crazy ass black magic!
   				resizedDecompressedBuffer
   					[(h * 256 * 3) + (2 * w * 3) + rgb]
   					= decompressedBuffer
@@ -51,21 +50,20 @@ unsigned char * jpegStretch(unsigned char * jpegBuffer, int &size) {
   					= decompressedBuffer
   					[(h * 128 * 3) + (w * 3) + rgb];
   			}
-  		
+		}
   	}
-
-	free(decompressedBuffer);
-	
 	return resizedDecompressedBuffer;
 }
 
 
 // Gets Jpeg from scribbler, stretches it, and returns it in the correct format
 unsigned char * expandedPhotoJPEG(Scribbler * _scribbler) {
-	Data * jpeg = _scribbler->takePhotoJPEG();
-	unsigned char * adata = (unsigned char *)jpeg->getData();
+	if (_scribbler == 0) return 0;
+	Data* jpeg = _scribbler->takePhotoJPEG();
+	if (jpeg == 0) return 0;
+	unsigned char* adata = (unsigned char *)jpeg->getData();
 	int dataSize = jpeg->getDataSize();
-	unsigned char * expanded = jpegStretch(adata, dataSize);
+	unsigned char* expanded = jpegStretch(adata, dataSize);
 	delete jpeg;
 	return expanded;
 }
@@ -146,7 +144,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 				}
 			}
 			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Linear velocity data is set: %d points recorded.\n", linear_velocity.size());
+				fprintf(stderr, "Linear velocity data is set: %lu points recorded.\n", linear_velocity.size());
 			#endif
 		} else {
 			#ifdef FRIBBLER_DEBUG
@@ -169,7 +167,7 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 				}
 			}
 			#ifdef FRIBBLER_DEBUG
-				fprintf(stderr, "Angular velocity data is set: %d points recorded.\n", angular_velocity.size());
+				fprintf(stderr, "Angular velocity data is set: %lu points recorded.\n", angular_velocity.size());
 			#endif
 		} else {
 			#ifdef FRIBBLER_DEBUG
@@ -185,36 +183,30 @@ Fribbler::Fribbler(ConfigFile *cf, int section)
 	_hasCamera = false;
 	
 	// Add camera interface
-	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "jpeg") == 0)
-      {
-
-         if (this->AddInterface(_camera_addr) != 0)
-            {
-               PLAYER_ERROR("Could not add Camera interface for Fribbler");
-               this->SetError(-1);
-               return;
-            } else {
-			    _hasCamera = true;
+	if (cf->ReadDeviceAddr(&_camera_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "jpeg") == 0) {
+		if (this->AddInterface(_camera_addr) != 0) {
+		   PLAYER_ERROR("Could not add Camera interface for Fribbler");
+		   this->SetError(-1);
+		   return;
+		} else {
+			_hasCamera = true;
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Fribbler is providing a Camera interface.\n");
 			#endif
-			}
-      }
+		}
+	}
 
-	if (cf->ReadDeviceAddr(&_blob_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "blobimage") == 0)
-    {
-
-       if (this->AddInterface(_blob_addr) != 0)
-          {
+	if (cf->ReadDeviceAddr(&_blob_addr, section, "provides", PLAYER_CAMERA_CODE, -1, "blobimage") == 0) {
+		if (this->AddInterface(_blob_addr) != 0) {
              PLAYER_ERROR("Could not add BlobImage Camera interface for Fribbler");
              this->SetError(-1);
              return;
-          } else {
-			    _hasBlob = true;
+		} else {
+			_hasBlob = true;
 			#ifdef FRIBBLER_DEBUG
 				fprintf(stderr, "Fribbler is providing a BlobImage Camera interface.\n");
 			#endif
-			}
+		}
     }
 
 	#ifdef FRIBBLER_DEBUG
@@ -270,7 +262,6 @@ int Fribbler::MainSetup()
 	#endif
 
 	// Looking good; cross your fingers!
-	StartThread();
 	return 0;
 }
 
@@ -292,8 +283,6 @@ Fribbler::~Fribbler()
 // are subscribed to a device to a state in which there are no longer any clients subscribed.
 void Fribbler::MainQuit()
 {
-	StopThread();
-
 	// Disconnect from the Scribbler and return any resources used for it.
 	#ifdef FRIBBLER_DEBUG
 		fprintf(stderr, "Disconnecting from the Scribbler.\n");
@@ -338,48 +327,38 @@ void Fribbler::Main()
 			#endif
 		}
 */
-		player_camera_data_t camdata;
-        memset(&camdata, 0, sizeof(camdata));
-        camdata.fdiv = 1; // Not sure what this is?
-        camdata.bpp = 24; // 24 bits per pixel
-		camdata.width = 256;
-        camdata.height = 192;
-        camdata.format = PLAYER_CAMERA_FORMAT_RGB888;
-        camdata.compression = PLAYER_CAMERA_COMPRESS_RAW;
-        camdata.image_count = 256*192*3;
         
 		// Update the interfaces that we're providing.
-		Lock();
-		// Position2D
-			_position_data.pos.px += _framerate * _position_data.vel.px;
-			_position_data.pos.py += _framerate * _position_data.vel.py;
-			_position_data.pos.pa += _framerate * _position_data.vel.pa;
-			if(_hasCamera) {
+		if (_hasPosition) {
+			Lock();
+				_position_data.pos.px += _framerate * _position_data.vel.px;
+				_position_data.pos.py += _framerate * _position_data.vel.py;
+				_position_data.pos.pa += _framerate * _position_data.vel.pa;
+			Unlock();
+			Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
+		}
+		if(_hasCamera) {
 			int since = difftime(time(NULL), seconds);
-			
-				// Camera data
-				if (camdata.image == NULL)
-                  	camdata.image = (uint8_t *) malloc(camdata.image_count);
-            	else
-               	{
-                  	camdata.image = (uint8_t *) realloc(camdata.image, camdata.image_count);
-               	}
-				// expandedPhotoJPEG converts to a RAW RBG so we're fine here!
-				if((since >= _camrate) || _firstPic) { // _firstPic makes sure that the camera is updated on first access
-					picture = expandedPhotoJPEG(_scribbler);
+			player_camera_data_t camdata;
+			memset(&camdata, 0, sizeof(player_camera_data_t));
+			camdata.fdiv = 1; // Not sure what this is?
+			camdata.bpp = 24; // 24 bits per pixel
+			camdata.width = 256;
+			camdata.height = 192;
+			camdata.format = PLAYER_CAMERA_FORMAT_RGB888;
+			camdata.compression = PLAYER_CAMERA_COMPRESS_RAW;
+			camdata.image_count = 256*192*3;
+			// expandedPhotoJPEG converts to a RAW RBG so we're fine here!
+			if((since >= _camrate) || _firstPic) { // _firstPic makes sure that the camera is updated on first access
+				if ((picture = expandedPhotoJPEG(_scribbler)) != 0) {
 					_firstPic = false;
 					seconds = time(NULL);
+					camdata.image = picture;
+					Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata);
+					delete picture;
 				}
-            	memcpy(camdata.image, picture, camdata.image_count); 
 			}
-     
-		Unlock();
-
-		// Publish our updated interfaces.
-		// Position2D
-		Publish(_position_addr, PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE, (void *)&_position_data, sizeof(_position_data), 0);
-		if(_hasCamera)
-        	Publish(_camera_addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void*) &camdata, sizeof(camdata), 0);
+		}
 
 		ProcessMessages();
 		usleep(FRIBBLER_CYCLE); // Breathe!
@@ -388,7 +367,9 @@ void Fribbler::Main()
 		}
 		_framerate = (_t1.tv_sec + (_t1.tv_usec / 1000000.0)) -
 		             (_t0.tv_sec + (_t0.tv_usec / 1000000.0));
-		fprintf(stderr, "frame: %f s\n", _framerate);
+		#if 0
+			fprintf(stderr, "frame: %f s\n", _framerate);
+		#endif
 	}
 
 	#ifdef FRIBBLER_DEBUG
@@ -410,7 +391,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 {
 	// FIXME: might be a good idea to wrap this stuff into functions to avoid clutter; maybe individual interface classes
 	if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_GET_GEOM, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D geometry request.\n");
 		#endif
 		// Fill in the Scribbler's physical dimensions.
@@ -422,7 +403,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_GET_GEOM, (void *)&_position_geom, sizeof(player_position2d_geom_t), 0);
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_RESET_ODOM, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D request to reset odometry.\n");
 		#endif
 		// Reset the odometry.
@@ -435,18 +416,18 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_RESET_ODOM);
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_MOTOR_POWER, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D motor power request.\n");
 		#endif
 		// Extract the data that accompanied this command.
 		bool motorState = ((player_position2d_power_config_t *)data)->state;
 		if (motorState) {
-			#ifdef FRIBBLER_DEBUG
+			#if 0
 				fprintf(stderr, "Turning on the Scribbler's motors.\n");
 			#endif
 			// FIXME: what do we do here?
 		} else {
-			#ifdef FRIBBLER_DEBUG
+			#if 0
 				fprintf(stderr, "Turning off the Scribbler's motors.\n");
 			#endif
 			_scribbler->stop();
@@ -455,7 +436,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_MOTOR_POWER);
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_SET_ODOM, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D odometry request.\n");
 		#endif
 		// Reset the odometry.
@@ -471,7 +452,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		Publish(_position_addr, queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_POSITION2D_REQ_SET_ODOM, (void *)&_position_odom, sizeof(player_position2d_set_odom_req_t), 0);
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_VEL, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D velocity command.\n");
 		#endif
 		// Extract the data that accompanied this command.
@@ -489,7 +470,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 				}
 			#endif
 			try {
-				RealVector3 v = angular_velocity.interpolate(cmd->vel.pa);
+				RealVector3 v = angular_velocity.truncate(cmd->vel.pa);
 				cmd->vel.px = 0;
 				cmd->vel.pa = v[0];
 				leftMotor  = static_cast<int>(v[1]);
@@ -515,7 +496,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 				}
 			#endif
 			try {
-				RealVector3 v = linear_velocity.interpolate(cmd->vel.px);
+				RealVector3 v = linear_velocity.truncate(cmd->vel.px);
 				cmd->vel.px = v[0];
 				cmd->vel.pa = 0;
 				leftMotor  = static_cast<int>(v[1]);
@@ -555,7 +536,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_CAR, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D car-like command.\n");
 		#endif
 		// Extract the data that accompanied this command.
@@ -575,7 +556,7 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		}
 		return 0;
 	} else if (Message::MatchMessage(msghdr, PLAYER_MSGTYPE_CMD, PLAYER_POSITION2D_CMD_POS, _position_addr)) {
-		#ifdef FRIBBLER_DEBUG
+		#if 0
 			fprintf(stderr, "Received Position2D position command.\n");
 		#endif
 		// TODO: Go to a specific position.

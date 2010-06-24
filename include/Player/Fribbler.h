@@ -5,13 +5,11 @@
 #ifndef FRIBBLER_H
 #define FRIBBLER_H
 
-#define FRIBBLER_DEBUG 1
 #define FRIBBLER_CYCLE 10000 // 1000000/10000 == 0.01 seconds
 #include <vector>
 #include "libplayercore/playercore.h"
 #include "Scribbler/scribbler.h"
 #include "metrobotics.h"
-using namespace metrobotics;
 
 Driver* Fribbler_Init(ConfigFile *cf, int section);
 void Fribbler_Register(DriverTable *table);
@@ -42,8 +40,8 @@ class Fribbler : public ThreadedDriver
 		bool			_hasBlob;
 
 		// Velocity mapping
-		Lerp<3> linear_velocity;
-		Lerp<3> angular_velocity;
+		metrobotics::Lerp<3> linear_velocity;
+		metrobotics::Lerp<3> angular_velocity;
 
 		// Player interfaces.
 		// Position2D

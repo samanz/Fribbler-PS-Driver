@@ -5,6 +5,9 @@ CC = g++
 AR = ar
 CP = cp
 
+# Dependency: MetroUtil
+METROUTIL := MetroUtil/lib/libMetrobotics.a
+
 # Player driver (Fribbler) definitions
 PLAYER_OUTPUT  = libFribbler.so
 PLAYER_OBJECTS = Fribbler.o
@@ -54,7 +57,7 @@ all:
 Fribbler: $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS)
 	$(CC)  $(PLAYER_LFLAGS) -o $(PLAYER_OUTPUT) $(PLAYER_OBJECTS) $(SCRIBBLER_OBJECTS) $(PLAYER_LIBS)
 
-Fribbler.o: $(PLAYER_SOURCES) $(PLAYER_HEADERS) $(SCRIBBLER_HEADERS)
+Fribbler.o: $(PLAYER_SOURCES) $(PLAYER_HEADERS) $(SCRIBBLER_HEADERS) $(METROUTIL)
 	$(CC) $(PLAYER_CFLAGS) $(PLAYER_SOURCES_DIR)/Fribbler.cpp
 
 # Player driver test engine
@@ -63,8 +66,16 @@ test-fribbler: src/test-fribbler.cpp
 
 # Stand-alone Scribbler library.
 libscribbler: $(SCRIBBLER_OBJECTS)
-	$(AR) rs $(SCRIBBLER_OUTPUT) $(SCRIBBLER_OBJECTS)
-	$(CP) ./$(SCRIBBLER_OUTPUT) ./lib/$(SCRIBBLER_OUTPUT)
+	@$(AR) rs $(SCRIBBLER_OUTPUT) $(SCRIBBLER_OBJECTS)
+	# Make sure a lib folder exists
+	@if [ ! -e "./lib" ]; then \
+		mkdir "./lib"; \
+	elif [ ! -d "./lib" ]; then \
+		echo "Failed to install library files."; \
+		echo "./lib is not a valid directory."; \
+		exit 1; \
+	fi
+	@$(CP) ./$(SCRIBBLER_OUTPUT) ./lib/$(SCRIBBLER_OUTPUT)
 
 data.o: $(SCRIBBLER_SOURCES_DIR)/data.cpp $(SCRIBBLER_HEADERS_DIR)/data.h
 	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/data.cpp
@@ -80,6 +91,16 @@ robot.o: $(SCRIBBLER_SOURCES_DIR)/robot.cpp $(SCRIBBLER_HEADERS_DIR)/robot.h $(S
 
 scribbler.o: $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp $(SCRIBBLER_HEADERS_DIR)/scribbler.h $(SCRIBBLER_HEADERS_DIR)/const.h $(SCRIBBLER_HEADERS_DIR)/robot.h $(SCRIBBLER_HEADERS_DIR)/data.h
 	$(CC) $(SCRIBBLER_CFLAGS) $(SCRIBBLER_SOURCES_DIR)/scribbler.cpp
+
+# Dependency: MetroUtil
+$(METROUTIL):
+	@echo Building MetroUtil
+	@$(MAKE) -e --directory="./MetroUtil" install
+	@if [ "$$?" != 0 ]; then \
+		echo "MetroUtil failed to build"; \
+		echo "Fribbler depends on MetroUtil"; \
+		exit 1; \
+	fi
 
 # Sam's test program
 test:
@@ -106,4 +127,5 @@ calibration: src/calibration.cpp
 	$(CC) src/calibration.cpp -I./include/Scribbler -L./lib -lscribbler
 
 clean:
+	@$(MAKE) -e --directory="./MetroUtil" clean
 	rm -rf *.a *.so *.o a.out log1 test-fribbler square-fribbler newplayercam
