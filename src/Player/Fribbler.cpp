@@ -9,6 +9,7 @@
 using metrobotics::RealVector3;
 
 #include <stdexcept>
+#include <cmath>
 using namespace std;
 
 #include <stdio.h>
@@ -530,7 +531,8 @@ int Fribbler::ProcessMessage(QueuePointer &queue, player_msghdr *msghdr, void *d
 		} else {
 			// Update our position data.
 			Lock();
-				_position_data.vel.px = cmd->vel.px;
+				_position_data.vel.px = cmd->vel.px*cos(_position_data.pos.pa);
+				_position_data.vel.py = cmd->vel.px*sin(_position_data.pos.pa);
 				_position_data.vel.pa = cmd->vel.pa;
 			Unlock();
 		}
